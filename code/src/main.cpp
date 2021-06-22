@@ -44,118 +44,137 @@ os.path.supports_unicode_filenames 	设置是否支持unicode路径名
 #include <iostream>
 #include "toml++/toml.h"
 
-int main()
-{
-    auto config = toml::parse_file( "../code/config.toml" );
 
-// get key-value pairs
-    std::string_view library_name = config["owner"]["name"].value_or("");
-    toml::date library_author = config["owner"]["dob"].value_or(toml::date());
-
-    std::string_view server_ip = config["database"]["server"].value_or("");
-    short ports1 = config["ports"][0].value_or(0);
-    auto ports2 = config["ports"][1].value<short>();
-    short ports3 = config["ports"][2].value_or(0);
-    int connection_max = config["connection_max"].value_or(0);
-    std::string_view ip = config["servers"]["alpha"]["ip"].value_or("");
-    std::cout << ip << std::endl;
-//// modify the data
-//    config.insert_or_assign("alternatives", toml::array{
-//            "cpptoml",
-//            "toml11",
-//            "Boost.TOML"
-//    });
+//int main()
+//{
+//    auto config = toml::parse_file( "../code/config.toml" );
 //
-//// iterate & visit over the data
-    for (auto&& [k, v] : config)
-    {
-        v.visit([](auto& node) noexcept
-                {
-                    std::cout << node << "\n";
-                    if constexpr (toml::is_string<decltype(node)>)
-                        ;
-//                        do_something_with_string_values(node);
-                });
-    }
+//// get key-value pairs
+//    std::string_view library_name = config["owner"]["name"].value_or("");
+//    toml::date library_author = config["owner"]["dob"].value_or(toml::date());
 //
-//// re-serialize as TOML
-//    std::cout << config << "\n";
+//    std::string_view server_ip = config["database"]["server"].value_or("");
+//    short ports1 = config["ports"][0].value_or(0);
+//    auto ports2 = config["ports"][1].value<short>();
+//    short ports3 = config["ports"][2].value_or(0);
+//    int connection_max = config["connection_max"].value_or(0);
+//    std::string_view ip = config["servers"]["alpha"]["ip"].value_or("");
+//    std::cout << ip << std::endl;
+////// modify the data
+////    config.insert_or_assign("alternatives", toml::array{
+////            "cpptoml",
+////            "toml11",
+////            "Boost.TOML"
+////    });
+////
+////// iterate & visit over the data
+//    for (auto&& [k, v] : config)
+//    {
+//        v.visit([](auto& node) noexcept
+//                {
+//                    std::cout << node << "\n";
+//                    if constexpr (toml::is_string<decltype(node)>)
+//                        ;
+////                        do_something_with_string_values(node);
+//                });
+//    }
+////
+////// re-serialize as TOML
+////    std::cout << config << "\n";
+////
+////// re-serialize as JSON
+////    std::cout << toml::json_formatter{ config } << "\n";
 //
-//// re-serialize as JSON
-//    std::cout << toml::json_formatter{ config } << "\n";
+//    if("目录连接")
+//    {
+//        PurePath a("c:/");
+//        PurePath b("bbbb");
+//        PurePath c("cccc");
+//        PurePath d("dddd");
+//        PurePath e("c:\\", "aaaa", "cccc", "dddd");
+//
+//        std::cout <<
+//        os_path.joinpath(a).c_str() << '\n' <<
+//        os_path.joinpath(a, b).c_str() << '\n' <<
+//        os_path.joinpath(a, b, c).c_str() << '\n' <<
+//        "by construct(A,B,C ....)  ->  " << e.c_str() << '\n' <<
+//        os_path.joinpath(a, b, c, d).c_str() << std::endl;
+//    }
+//    if("取绝对路径")
+//    {
+//        std::cout <<
+//                  os_path.abspath("./a.txt").c_str() << '\n' <<
+//                  os_path.abspath("../b.txt").c_str() << '\n' <<
+//                  os_path.abspath(PurePath(__file__)).c_str() << std::endl;
+//    }
+//    if("取文件名字带后缀")
+//    {
+//        std::cout <<
+//                  PurePath("c:/folder1/a.txt").basename().c_str() << '\n' <<
+//                  PurePath("c:/folder1/folder2").basename().c_str() << '\n' <<
+//                  PurePath("c:/folder1/.").basename().c_str() << std::endl;
+//    }
+//    if("去除目录中的.|..")
+//    {
+//        std::cout << PurePath::normal("\\.\\ab\\cd\\ef\\") << std::endl; //                   \ab\cd\ef
+//        std::cout << PurePath::normal("\\.\\..\\b\\..\\ab\\cd\\ef\\") << std::endl;//         \..\ab\cd\ef
+//        std::cout << PurePath::normal("\\..\\..\\b\\..\\ab\\cd\\ef\\") << std::endl;//         \..\..\ab\cd\ef
+//        std::cout << PurePath::normal("\\..\\..\\b\\.\\..\\ab\\cd\\ef\\") << std::endl;//      \..\..\ab\cd\ef
+//        std::cout << PurePath::normal(".\\..\\..\\b\\..\\ab\\cd\\ef\\") << std::endl;//       ..\..\ab\cd\ef
+//        std::cout << PurePath::normal("\\..\\..\\b\\..\\ab\\cd\\ef\\") << std::endl;//        \..\..\ab\cd\ef
+//        std::cout << PurePath::normal("\\.\\.\\b\\..\\ab\\cd\\ef\\") << std::endl;//          \ab\cd\ef
+//        std::cout << PurePath::normal(".\\.\\..\\..\\b\\..\\ab\\cd\\ef\\") << std::endl;//    ..\..\ab\cd\ef
+//        std::cout << PurePath::normal("..\\.\\..\\..\\b\\..\\ab\\cd\\ef\\") << std::endl;//    ..\..\..\ab\cd\ef
+//    }
+//    if("取N个路径最长公共部分")
+//    {
+//        std::cout << PurePath::commonprefix({"c:/aA/bb/cc", "c:\\Aa\\BB/dd", "c:\\aa/Bb/ee"}) << std::endl; // "windows c:\aa\bb\  Linux c:/"
+//        std::cout << PurePath::commonprefix({"./aa/xx/../bB", ".\\aa\\ff/.././bB//cc/dd", ".\\aa/./BB/Cc/dd"}) << std::endl; // "windows aa\bb  Linux aa"
+//    }
+//    if("取文件路径")
+//    {
+//        std::cout << PurePath::dirname("C:/aA/bb/cc") << std::endl;
+//        std::cout << PurePath::dirname("C:/aA/bb/a.txt") << std::endl;
+//        std::cout << PurePath::dirname("a.txt") << std::endl;
+//        std::cout << PurePath::dirname("/a.txt") << std::endl;
+//        std::cout << PurePath::dirname("c:\\a.txt") << std::endl;
+//    }
+//
+//
+//    if("判断路径是否存在")
+//    {
+//        std::cout << PurePath::exists("c:\\") << std::endl;// true
+//        std::cout << PurePath::exists("c:/") << std::endl;// true
+//        std::cout << PurePath::exists("c:") << std::endl;// true
+//        std::cout << PurePath::exists("c") << std::endl;// false
+//        std::cout << PurePath::exists("R:\\") << std::endl; // false
+//        std::cout << PurePath::exists("c:\\Users") << std::endl;// true
+//        std::cout << PurePath::exists("C:\\Documents and Settings") << std::endl;// true
+//        std::cout << PurePath::exists(" \t \r    C:\\Windows/System32\\notepad.exe \t \r") << std::endl;// true
+//    }
+//    if("home(~)符号替换为完整路径")
+//    {
+//        std::cout << PurePath::expanduser("~/a.txt") << std::endl;
+//        std::cout << PurePath::expanduser("~vv/a.txt") << std::endl;
+//        std::cout << PurePath::expanduser("~~/a.txt") << std::endl;
+//        std::cout << PurePath::expanduser("%USERPROFILE%/b.txt") << std::endl;
+//    }
+//
+//    return 0;
+//}
 
-    if("目录连接")
-    {
-        PurePath a("c:/");
-        PurePath b("bbbb");
-        PurePath c("cccc");
-        PurePath d("dddd");
-        PurePath e("c:\\", "aaaa", "cccc", "dddd");
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
-        std::cout <<
-        os_path.joinpath(a).c_str() << '\n' <<
-        os_path.joinpath(a, b).c_str() << '\n' <<
-        os_path.joinpath(a, b, c).c_str() << '\n' <<
-        "by construct(A,B,C ....)  ->  " << e.c_str() << '\n' <<
-        os_path.joinpath(a, b, c, d).c_str() << std::endl;
-    }
-    if("取绝对路径")
-    {
-        std::cout <<
-                  os_path.abspath("./a.txt").c_str() << '\n' <<
-                  os_path.abspath("../b.txt").c_str() << '\n' <<
-                  os_path.abspath(PurePath(__file__)).c_str() << std::endl;
-    }
-    if("取文件名字带后缀")
-    {
-        std::cout <<
-                  PurePath("c:/folder1/a.txt").basename().c_str() << '\n' <<
-                  PurePath("c:/folder1/folder2").basename().c_str() << '\n' <<
-                  PurePath("c:/folder1/.").basename().c_str() << std::endl;
-    }
-    if("去除目录中的.|..")
-    {
-        std::cout << PurePath::normal("\\.\\ab\\cd\\ef\\") << std::endl; //                   \ab\cd\ef
-        std::cout << PurePath::normal("\\.\\..\\b\\..\\ab\\cd\\ef\\") << std::endl;//         \..\ab\cd\ef
-        std::cout << PurePath::normal("\\..\\..\\b\\..\\ab\\cd\\ef\\") << std::endl;//         \..\..\ab\cd\ef
-        std::cout << PurePath::normal("\\..\\..\\b\\.\\..\\ab\\cd\\ef\\") << std::endl;//      \..\..\ab\cd\ef
-        std::cout << PurePath::normal(".\\..\\..\\b\\..\\ab\\cd\\ef\\") << std::endl;//       ..\..\ab\cd\ef
-        std::cout << PurePath::normal("\\..\\..\\b\\..\\ab\\cd\\ef\\") << std::endl;//        \..\..\ab\cd\ef
-        std::cout << PurePath::normal("\\.\\.\\b\\..\\ab\\cd\\ef\\") << std::endl;//          \ab\cd\ef
-        std::cout << PurePath::normal(".\\.\\..\\..\\b\\..\\ab\\cd\\ef\\") << std::endl;//    ..\..\ab\cd\ef
-        std::cout << PurePath::normal("..\\.\\..\\..\\b\\..\\ab\\cd\\ef\\") << std::endl;//    ..\..\..\ab\cd\ef
-    }
-    if("取N个路径最长公共部分")
-    {
-        std::cout << PurePath::commonprefix({"c:/aA/bb/cc", "c:\\Aa\\BB/dd", "c:\\aa/Bb/ee"}) << std::endl; // "windows c:\aa\bb\  Linux c:/"
-        std::cout << PurePath::commonprefix({"./aa/xx/../bB", ".\\aa\\ff/.././bB//cc/dd", ".\\aa/./BB/Cc/dd"}) << std::endl; // "windows aa\bb  Linux aa"
-    }
-    if("取文件路径")
-    {
-        std::cout << PurePath::dirname("C:/aA/bb/cc") << std::endl;
-        std::cout << PurePath::dirname("C:/aA/bb/a.txt") << std::endl;
-        std::cout << PurePath::dirname("a.txt") << std::endl;
-        std::cout << PurePath::dirname("/a.txt") << std::endl;
-        std::cout << PurePath::dirname("c:\\a.txt") << std::endl;
-    }
-    if("判断路径是否存在")
-    {
-        std::cout << PurePath::exists("c:\\") << std::endl;// true
-        std::cout << PurePath::exists("c:/") << std::endl;// true
-        std::cout << PurePath::exists("c:") << std::endl;// true
-        std::cout << PurePath::exists("c") << std::endl;// false
-        std::cout << PurePath::exists("R:\\") << std::endl; // false
-        std::cout << PurePath::exists("c:\\Users") << std::endl;// true
-        std::cout << PurePath::exists("C:\\Documents and Settings") << std::endl;// true
-        std::cout << PurePath::exists(" \t \r    C:\\Windows/System32\\notepad.exe \t \r") << std::endl;// true
-    }
-    if("home(~)符号替换为完整路径")
-    {
-        std::cout << PurePath::expanduser("~/a.txt") << std::endl;
-        std::cout << PurePath::expanduser("~vv/a.txt") << std::endl;
-        std::cout << PurePath::expanduser("~~/a.txt") << std::endl;
-        std::cout << PurePath::expanduser("%USERPROFILE%/b.txt") << std::endl;
-    }
+#include "doctest.h"
 
-    return 0;
+TEST_CASE("PurePath::exists") {
+    CHECK(PurePath::exists("c:\\")  == false);
+    CHECK(PurePath::exists("c:/") == true);
+    CHECK(PurePath::exists("c:") == true);
+    CHECK(PurePath::exists("c") == false);
+    CHECK(PurePath::exists("R:\\") == false);
+    CHECK(PurePath::exists("c:\\Users") == true);
+    CHECK(PurePath::exists("C:\\Documents and Settings") == true);
+    CHECK(PurePath::exists(" \t \r    C:\\Windows/System32\\notepad.exe \t \r") == true);
+
 }

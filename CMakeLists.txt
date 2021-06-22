@@ -29,6 +29,11 @@ set(LIBS ${LIBS} crypt32 libssh2 ws2_32 advapi32 shell32 user32 gdi32 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/general/tomlplusplus-2.4.0/include/)
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/general/doctest-2.4.6/doctest/)
+#add_library(doctest "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/general/doctest-2.4.6/doctest/parts/doctest.cpp")
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/general/doctest-2.4.6/)
+set(LIBS ${LIBS} doctest::doctest)
+
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/general/GameNetworkingSockets-1.3.0/)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/general/GameNetworkingSockets-1.3.0/include/)
 set(LIBS ${LIBS} GameNetworkingSockets_s)
