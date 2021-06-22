@@ -101,6 +101,37 @@ typedef char char_type;
     PurePath(const T& v, TAIL... args){
         PurePath2(v, args...);
     }
+
+
+    static std::string normal(std::string s);
+    static std::string commonprefix(const std::vector<PurePath>& strs);
+    static std::string dirname(const std::string &str);
+    static bool exists(const std::string &str);
+    static std::string expanduser(const std::string &str) ;
+    static std::string expandvars(const std::string &str) ;//TODO
+
+
+    std::vector<std::string >parts; //一个元组，可以访问路径的多个组件
+    std::string drive; //一个表示驱动器盘符或命名的字符串，如果存在: PureWindowsPath('c:/Program Files/').drive-> 'c:'  PureWindowsPath('//host/share/foo.txt').drive -> '\\\\host\\share'
+    std::string root;// PureWindowsPath('c:/Program Files/').root   -> '\\'   >>> PurePosixPath('/etc').root  ->'/'    PureWindowsPath('//host/share').root   -> '\\'
+    std::string anchor;
+    std::vector<std::string >parents;
+    std::string parent;
+    std::string name;
+    std::string suffix;
+    std::vector<std::string> suffixes;
+    std::string stem;
+    std::string as_posix();
+    std::string as_uri();
+    bool is_absolute();
+    bool is_relative_to(const std::string& other);
+    bool is_reserved();
+    std::string match(const std::string& str);
+    std::string relative_to(const std::string& str);
+    std::string with_name(const std::string& str);
+    std::string with_stem(const std::string& str);
+    std::string with_suffix(const std::string& str);
+
     template <typename T>
     PurePath& joinpath(const T& v){
         return joinpath_(v);
@@ -110,56 +141,53 @@ typedef char char_type;
         joinpath(v);
         return joinpath(args...);
     }
-
-    static std::string normal(std::string s);
-    static std::string commonprefix(const std::vector<PurePath>& strs);
-    static std::string dirname(const std::string &str);
-    static bool exists(const std::string &str);
-    static std::string expanduser(const std::string &str) ;
-    static std::string expandvars(const std::string &str) ;//TODO
-
-    static bool is_absolute(const std::string& str);
-    static bool is_relative_to(const std::string& str);
-    static bool is_reserved();
-    static bool match(const std::string& str);
-    static std::string relative_to(const std::string& strParent, const std::string& strChild);
-    static std::string with_name(const std::string& oldStr, const std::string& name);
-    static std::string with_stem(const std::string& oldStr, const std::string& stem);
-    static std::string with_suffix(const std::string& oldStr, const std::string& suffix);
-    static std::stirng parts
-    //PurePath('foo', 'some/path', 'bar') -> PurePosixPath('foo/some/path/bar')
-
-    //    basename(path) // 	返回文件名
-//    commonprefix(list) // 	返回list(多个路径) //中，所有path共有的最长的路径
-//    dirname(path) // 	返回文件路径
-//    exists(path) // 	路径存在则返回True,路径损坏返回False
-//    lexists 	//路径存在则返回True,路径损坏也返回True
-//    expanduser(path) // 	把path中包含的"~"和"~user"转换成用户目录
-//    expandvars(path) // 	根据环境变量的值替换path中包含的"$name"和"${name}"
-//    getatime(path) // 	返回最近访问时间（浮点型秒数）
-//    getmtime(path) // 	返回最近文件修改时间
-//    getctime(path) // 	返回文件 path 创建时间
-//    getsize(path) // 	返回文件大小，如果文件不存在就返回错误
-//    isabs(path) // 	判断是否为绝对路径
-//    isfile(path) // 	判断路径是否为文件
-//    isdir(path) // 	判断路径是否为目录
-//    islink(path) // 	判断路径是否为链接
-//    ismount(path) // 	判断路径是否为挂载点
-//    join(path1[, path2[, ...]]) // 	把目录和文件名合成一个路径
-//    normcase(path) // 	转换path的大小写和斜杠
-//    normpath(path) // 	规范path字符串形式
-//    realpath(path) // 	返回path的真实路径
-//    relpath(path[, start]) // 	从start开始计算相对路径
-//    samefile(path1, path2) // 	判断目录或文件是否相同
-//    sameopenfile(fp1, fp2) // 	判断fp1和fp2是否指向同一文件
-//    samestat(stat1, stat2) // 	判断stat tuple stat1和stat2是否指向同一个文件
-//    split(path) // 	把路径分割成 dirname 和 basename，返回一个元组
-//    splitdrive(path) // 	一般用在 windows 下，返回驱动器名和路径组成的元组
-//    splitext(path) // 	分割路径中的文件名与拓展名
-//    splitunc(path) // 	把路径分割为加载点与文件
-//    walk(path, visit, arg) // 	遍历path，进入每个目录都调用visit函数，visit函数必须有3个参数(arg, dirname, names) //，dirname表示当前目录的目录名，names代表当前目录下的所有文件名，args则为walk的第三个参数
-//    supports_unicode_filenames 	设置是否支持unicode路径名
 };
 
+class Path{
+public:
+    struct stat_result{
+        int64_t st_size;
+        int64_t st_mtime;
+        int32_t st_mode;
+    };
+
+    stat_result stat();//返回一个 os.stat_result 对象，其中包含有关此路径的信息，例如 os.stat()。 结果会在每次调用此方法时重新搜索。;
+    bool chmod(int mode);//改变文件的模式和权限;
+    std::string exists();//文件是否存在;
+    std::string expanduser();//返回展开了包含 ~ 和 ~user 的构造;
+    std::string glob(const std::string & pattern);//解析相对于此路径的通配符 pattern，产生所有匹配的文件:;
+    std::string group();//返回拥有此文件的用户组。如果文件的 GID 无法在系统数据库中找到，将抛出 KeyError 。;
+    std::string is_dir();//如果路径指向一个目录（或者一个指向目录的符号链接）则返回 True，如果指向其他类型的文件则返回 False。当路径不存在或者是一个破损的符号链接时也会返回 False；其他错误（例如权限错误）被传播。;
+    std::string is_file();//如果路径指向一个正常的文件（或者一个指向正常文件的符号链接）则返回 True，如果指向其他类型的文件则返回 False。 当路径不存在或者是一个破损的符号链接时也会返回 False；其他错误（例如权限错误）被传播;
+    std::string is_mount();//如果路径是一个 挂载点 <mount point>：在文件系统中被其他不同的文件系统挂载的地点。在 POSIX 系统，此函数检查 path 的父级 —— path/.. 是否处于一个和 path 不同的设备中，或者 file:path/.. 和 path 是否指向相同设备的相同 i-node —— 这能检测所有 Unix 以及 POSIX 变种上的挂载点。 Windows 上未实现。;
+    std::string is_symlink();//如果路径指向符号链接则返回 True， 否则 False。如果路径不存在也返回 False；其他错误（例如权限错误）被传播。;
+    std::string is_socket(); //如果路径指向一个 Unix socket 文件（或者指向 Unix socket 文件的符号链接）则返回 True，如果指向其他类型的文件则返回 False。当路径不存在或者是一个破损的符号链接时也会返回 False；其他错误（例如权限错误）被传播。;
+    std::string is_fifo();//如果路径指向一个先进先出存储（或者指向先进先出存储的符号链接）则返回 True ，指向其他类型的文件则返回 False。当路径不存在或者是一个破损的符号链接时也会返回 False；其他错误（例如权限错误）被传播。;
+    std::string is_block_device();//如果文件指向一个块设备（或者指向块设备的符号链接）则返回 True，指向其他类型的文件则返回 False。当路径不存在或者是一个破损的符号链接时也会返回 False；其他错误（例如权限错误）被传播。;
+    std::string is_char_device();//如果路径指向一个字符设备（或指向字符设备的符号链接）则返回 True，指向其他类型的文件则返回 False。当路径不存在或者是一个破损的符号链接时也会返回 False；其他错误（例如权限错误）被传播。;
+    std::string iterdir();
+    std::string lchmod(int mode);
+    std::string lstat();
+    std::string mkdir(int mode=0777, bool parents=false, bool exist_ok=false);
+    std::string open(int mode='r', int buffering=-1, void* encoding=NULL, void* errors=NULL, void* newline=NULL);
+    std::string owner();
+    std::string read_bytes();
+    std::string read_text(void* encoding=NULL, void* errors=NULL);
+    std::string readlink();
+    std::string rename(const std::string &target);
+    std::string replace(const std::string &target);
+    std::string resolve(bool strict=false);
+    std::string rglob(const std::string &pattern);
+    std::string rmdir();
+    std::string samefile(const std::string &other_path);
+    std::string symlink_to(const std::string &target, bool target_is_directory=false);
+    std::string link_to(const std::string &target);
+    std::string touch(int mode=0666, bool exist_ok=true);
+    std::string unlink(bool missing_ok=false);
+    std::string write_bytes(std::vector<char> &data);
+    std::string write_text(const std::string &data, void* encoding=NULL, void* errors=NULL);
+    std::string cwd();
+    std::string home();
+};
 
 #endif //EM_PUREPATH_H

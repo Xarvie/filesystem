@@ -62,7 +62,8 @@ std::string PurePath::join(const std::string &a, const std::string &p) {
         _path = p;
         return _path;
     }
-    if (!_path.empty() && _path[_path.length() - 1] != PurePath::preferred_separator /*&& _path[_path.length() - 1] != ':'*/) {
+    if (!_path.empty() &&
+        _path[_path.length() - 1] != PurePath::preferred_separator /*&& _path[_path.length() - 1] != ':'*/) {
         _path += PurePath::preferred_separator;
     }
     if (p.empty()) {
@@ -460,19 +461,18 @@ std::string PurePath::expanduser(const std::string &pPath) {
 
 
     std::string home = (getenv("USERPROFILE"));
-    if(home.empty())
+    if (home.empty())
         return retStr;
     std::string retstr2 = "";
-    for(int i = 0; i < vec.size(); i++)
-    {
-        if(vec[i] == "~")
+    for (int i = 0; i < vec.size(); i++) {
+        if (vec[i] == "~")
             vec[i] = home;
-        else if(vec[i] == "%userprofile%")
+        else if (vec[i] == "%userprofile%")
             vec[i] = home;
-        if(i != vec.size() - 1)
-            retstr2 = retstr2+vec[i]+preferred_separator;
+        if (i != vec.size() - 1)
+            retstr2 = retstr2 + vec[i] + preferred_separator;
         else
-            retstr2 = retstr2+vec[i];
+            retstr2 = retstr2 + vec[i];
     }
 
     return retstr2;
@@ -502,19 +502,18 @@ std::string PurePath::expandvars(const std::string &pPath) {
 
 
     std::string home = (getenv("USERPROFILE"));
-    if(home.empty())
+    if (home.empty())
         return retStr;
     std::string retstr2 = "";
-    for(int i = 0; i < vec.size(); i++)
-    {
-        if(vec[i] == "~")
+    for (int i = 0; i < vec.size(); i++) {
+        if (vec[i] == "~")
             vec[i] = home;
-        else if(vec[i] == "%userprofile%")
+        else if (vec[i] == "%userprofile%")
             vec[i] = home;
-        if(i != vec.size() - 1)
-            retstr2 = retstr2+vec[i]+preferred_separator;
+        if (i != vec.size() - 1)
+            retstr2 = retstr2 + vec[i] + preferred_separator;
         else
-            retstr2 = retstr2+vec[i];
+            retstr2 = retstr2 + vec[i];
     }
 
     return retstr2;
@@ -526,38 +525,159 @@ std::string PurePath::expandvars(const std::string &pPath) {
 #endif
 }
 
-bool PurePath::is_absolute(const std::string& str)
-{
-    return false;
+
+
+//=========================================================================
+
+
+std::string PurePath::as_posix() {
+
+}
+
+std::string PurePath::as_uri() {
+
+}
+
+bool PurePath::is_absolute() {
+}
+
+bool PurePath::is_relative_to(const std::string &other) {
+}
+
+bool PurePath::is_reserved() {
+}
+
+std::string PurePath::match(const std::string &str) {
+}
+
+std::string PurePath::relative_to(const std::string &str) {
+}
+
+std::string PurePath::with_name(const std::string &str) {
+}
+
+std::string PurePath::with_stem(const std::string &str) {
+}
+
+std::string PurePath::with_suffix(const std::string &str) {
+
 }
 
 
-bool PurePath::is_relative_to(const std::string& str){
-    return false;
+//===============================================================
+
+
+
+
+Path::stat_result Path::stat(){
+    
 }
 
-bool PurePath::is_reserved(){
-    return false;
+bool chmod(int mode){//改变文件的模式和权限
 }
 
-bool PurePath::match(const std::string& str)
-{
-    return false;
+std::string Path::exists(){//文件是否存在
 }
 
-std::string PurePath::relative_to(const std::string& strParent, const std::string& strChild)
-{
-    return "";
+std::string Path::expanduser(){//返回展开了包含 ~ 和 ~user 的构造
 }
 
-std::string PurePath::with_name(const std::string& oldStr, const std::string& name){
-    return "";
+std::string Path::glob(const std::string & pattern){//解析相对于此路径的通配符 pattern，产生所有匹配的文件
 }
 
-std::string PurePath::with_stem(const std::string& oldStr, const std::string& stem){
-    return "";
+std::string Path::group(){//返回拥有此文件的用户组。如果文件的 GID 无法在系统数据库中找到，将抛出 KeyError 。
 }
 
-std::string PurePath::with_suffix(const std::string& oldStr, const std::string& suffix){
-    return "";
+std::string Path::is_dir(){//如果路径指向一个目录（或者一个指向目录的符号链接）则返回 True，如果指向其他类型的文件则返回 False。当路径不存在或者是一个破损的符号链接时也会返回 False；其他错误（例如权限错误）被传播。
+}
+
+std::string Path::is_file(){//如果路径指向一个正常的文件（或者一个指向正常文件的符号链接）则返回 True，如果指向其他类型的文件则返回 False。 当路径不存在或者是一个破损的符号链接时也会返回 False；其他错误（例如权限错误）被传播
+}
+
+std::string Path::is_mount(){//如果路径是一个 挂载点 <mount point>：在文件系统中被其他不同的文件系统挂载的地点。在 POSIX 系统，此函数检查 path 的父级 —— path/.. 是否处于一个和 path 不同的设备中，或者 file:path/.. 和 path 是否指向相同设备的相同 i-node —— 这能检测所有 Unix 以及 POSIX 变种上的挂载点。 Windows 上未实现。
+}
+
+std::string Path::is_symlink(){//如果路径指向符号链接则返回 True， 否则 False。如果路径不存在也返回 False；其他错误（例如权限错误）被传播。
+}
+
+std::string Path::is_socket(){ //如果路径指向一个 Unix socket 文件（或者指向 Unix socket 文件的符号链接）则返回 True，如果指向其他类型的文件则返回 False。当路径不存在或者是一个破损的符号链接时也会返回 False；其他错误（例如权限错误）被传播。
+}
+
+std::string Path::is_fifo(){//如果路径指向一个先进先出存储（或者指向先进先出存储的符号链接）则返回 True ，指向其他类型的文件则返回 False。当路径不存在或者是一个破损的符号链接时也会返回 False；其他错误（例如权限错误）被传播。
+}
+
+std::string Path::is_block_device(){//如果文件指向一个块设备（或者指向块设备的符号链接）则返回 True，指向其他类型的文件则返回 False。当路径不存在或者是一个破损的符号链接时也会返回 False；其他错误（例如权限错误）被传播。
+}
+
+std::string Path::is_char_device(){//如果路径指向一个字符设备（或指向字符设备的符号链接）则返回 True，指向其他类型的文件则返回 False。当路径不存在或者是一个破损的符号链接时也会返回 False；其他错误（例如权限错误）被传播。
+}
+
+std::string Path::iterdir(){
+}
+
+std::string Path::lchmod(int mode){
+}
+
+std::string Path::lstat(){
+}
+
+std::string Path::mkdir(int mode, bool parents, bool exist_ok){
+}
+
+std::string Path::open(int mode, int buffering, void* encoding, void* errors, void* newline){
+}
+
+std::string Path::owner(){
+}
+
+std::string Path::read_bytes(){
+}
+
+std::string Path::read_text(void* encoding, void* errors){
+}
+
+std::string Path::readlink(){
+}
+
+std::string Path::rename(const std::string &target){
+}
+
+std::string Path::replace(const std::string &target){
+}
+
+std::string Path::resolve(bool strict){
+}
+
+std::string Path::rglob(const std::string &pattern){
+}
+
+std::string Path::rmdir(){
+}
+
+std::string Path::samefile(const std::string &other_path){
+}
+
+std::string Path::symlink_to(const std::string &target, bool target_is_directory){
+}
+
+std::string Path::link_to(const std::string &target){
+}
+
+std::string Path::touch(int mode, bool exist_ok){
+}
+
+std::string Path::unlink(bool missing_ok){
+}
+
+std::string Path::write_bytes(std::vector<char> &data){
+}
+
+std::string Path::write_text(const std::string &data, void* encoding, void* errors){
+}
+
+std::string Path::cwd(){
+}
+
+std::string Path::home(){
+
 }
