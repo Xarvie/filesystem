@@ -168,7 +168,7 @@ os.path.supports_unicode_filenames 	设置是否支持unicode路径名
 #include "doctest.h"
 
 TEST_CASE("PurePath::exists") {
-    CHECK(PurePath::exists("c:\\")  == false);
+    CHECK(PurePath::exists("c:\\")  == true);
     CHECK(PurePath::exists("c:/") == true);
     CHECK(PurePath::exists("c:") == true);
     CHECK(PurePath::exists("c") == false);
