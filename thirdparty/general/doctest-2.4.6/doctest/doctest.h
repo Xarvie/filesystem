@@ -5797,7 +5797,7 @@ namespace {
             }
         }
 
-        void test_run_start() override { printIntro(); }
+        void test_run_start() override { /*printIntro();*/ }
 
         void test_run_end(const TestRunStats& p) override {
             separator_to_stream();
