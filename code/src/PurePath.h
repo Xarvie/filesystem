@@ -49,7 +49,32 @@
 #define __file__  PurePath(__FILE__).basename()
 class PurePath {
 public:
+    enum ProtoType{
+        PROTO_TYPE_NULL = 0,
+        PROTO_TYPE_UNC,
+        PROTO_TYPE_FILE_URI_WINDOWS,
+        PROTO_TYPE_FILE_URI_UNIX,
+        PROTO_TYPE_HTTP,
+        PROTO_TYPE_HTTPS,
+        PROTO_TYPE_SFTP,
+        PROTO_TYPE_FTP,
+        PROTO_TYPE_WIN_DRIVER,
+        PROTO_TYPE_WIN_ABS,
+        PROTO_TYPE_UNIX_ABS,
+        PROTO_TYPE_RELATIVE
+    };
     std::string _path = "";
+    std::string protoHead = "";
+    ProtoType protoType = PROTO_TYPE_NULL;
+    void setPath(std::string newPath){
+        _path = newPath;
+    }
+
+#ifdef OS_WINDOWS
+    bool windowsStyle = true;
+#else
+    bool windowsStyle = false;
+#endif
 
 typedef char char_type;
     enum format {
@@ -60,12 +85,22 @@ typedef char char_type;
         auto_format,     ///< Try to auto-detect the format, fallback to native
     };
     int _prefixLength = 0;
-
+    static constexpr char_type posix_separator = '/';
 #ifdef OS_WINDOWS
     static constexpr char_type preferred_separator = '\\';
+    static constexpr bool IS_WINDOWS = true;
 #else
+    static constexpr bool IS_WINDOWS = false;
     static constexpr char_type preferred_separator = '/';
 #endif
+
+    class NormalRet{
+    public:
+
+        std::vector<std::string> strs;
+        std::string protoHead = "";
+        ProtoType protoType = PROTO_TYPE_NULL;
+    };
     void toSystemSeparator();
     PurePath();
     explicit PurePath(const std::string& c);
@@ -74,7 +109,6 @@ typedef char char_type;
     PurePath& joinpath_(const PurePath& p);
     bool has_root_directory() const;
     size_t root_name_length() const noexcept;
-    bool is_absolute() const;
     bool empty() const noexcept;
     bool is_relative() const;
     bool has_root_name() const;
@@ -83,14 +117,20 @@ typedef char char_type;
     bool current_path(const PurePath& p) noexcept;
     PurePath abspath(const PurePath& p);
     std::string basename() const;
+    std::string str(){
+        std::string ret;
+        switch (protoType) {
 
-
-
-    void PurePath2(const std::string & v){
-        this->_path = join(this->_path, v);
+        }
     }
 
-    static std::string join(const std::string &a, const std::string &p);
+
+    void PurePath2(const std::string & c){
+        PurePath::join2(this->parts,this->protoHead,this->protoType, c);
+    }
+
+    static void join(PurePath::NormalRet &a, const std::string& s);
+    static void join2(std::vector<std::string>& strs, std::string& protoHead, ProtoType& protoType, const std::string& s);
 
     template <typename... TAIL>
     void PurePath2(const std::string& v, TAIL... args){
@@ -103,7 +143,7 @@ typedef char char_type;
     }
 
 
-    static std::string normal(std::string s);
+    static PurePath::NormalRet normal(const std::string& s);
     static std::string commonprefix(const std::vector<PurePath>& strs);
     static std::string dirname(const std::string &str);
     static bool exists(const std::string &str);
@@ -123,7 +163,7 @@ typedef char char_type;
     std::string stem;
     std::string as_posix();
     std::string as_uri();
-    bool is_absolute();
+    bool is_absolute() const;
     bool is_relative_to(const std::string& other);
     bool is_reserved();
     std::string match(const std::string& str);

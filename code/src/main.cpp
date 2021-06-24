@@ -167,15 +167,35 @@ os.path.supports_unicode_filenames 	设置是否支持unicode路径名
 
 #include "doctest.h"
 
-TEST_CASE("PurePath::exists") {
+//TEST_CASE("PurePath()") {
+//    CHECK(PurePath("c:/").parts[0] == "c:");
+//    CHECK(PurePath("./").parts.size() == 0);
+//    CHECK(PurePath("bbbb").parts[0] == "bbbb");
+//    CHECK(PurePath("c:\\", "aaaa", "cccc/", "dddd\\").parts == PurePath("c:\\aaaa\\cccc\\dddd").parts);
+//    CHECK(PurePath("\\\\", "aaaa", "cccc/", "dddd\\").parts == PurePath("\\\\aaaa\\cccc\\dddd").parts);
+//}
 
-    CHECK(PurePath::exists("c:\\")  == true);
-    CHECK(PurePath::exists("c:/") == true);
-    CHECK(PurePath::exists("c:") == true);
-    CHECK(PurePath::exists("c") == false);
-    CHECK(PurePath::exists("R:\\") == false);
-    CHECK(PurePath::exists("c:\\Users") == true);
-    CHECK(PurePath::exists("C:\\Documents and Settings") == true);
-    CHECK(PurePath::exists(" \t \r    C:\\Windows/System32\\notepad.exe \t \r") == true);
-
+TEST_CASE("PurePath::is_absolute()") {
+    CHECK(PurePath("c:/a/b").is_absolute() == true);
+    CHECK(PurePath("/a/b").is_absolute() == true);
+    CHECK(PurePath("./a/b").is_absolute() == false);
+    CHECK(PurePath("./").is_absolute() == false);
+    CHECK(PurePath(".").is_absolute() == false);
+    CHECK(PurePath("./").parts.size() == 0);
+    CHECK(PurePath("bbbb").parts[0] == "bbbb");
+    CHECK(PurePath("c:\\", "aaaa", "cccc/", "dddd\\").parts == PurePath("c:\\aaaa\\cccc\\dddd").parts);
+    CHECK(PurePath("\\\\", "aaaa", "cccc/", "dddd\\").parts == PurePath("\\\\aaaa\\cccc\\dddd").parts);
 }
+
+//TEST_CASE("PurePath::exists") {
+//
+//    CHECK(PurePath::exists("c:\\")  == true);
+//    CHECK(PurePath::exists("c:/") == true);
+//    CHECK(PurePath::exists("c:") == true);
+//    CHECK(PurePath::exists("c") == false);
+//    CHECK(PurePath::exists("R:\\") == false);
+//    CHECK(PurePath::exists("c:\\Users") == true);
+//    CHECK(PurePath::exists("C:\\Documents and Settings") == true);
+//    CHECK(PurePath::exists(" \t \r    C:\\Windows/System32\\notepad.exe \t \r") == true);
+//
+//}
