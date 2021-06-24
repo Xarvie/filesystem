@@ -177,6 +177,7 @@ os.path.supports_unicode_filenames 	设置是否支持unicode路径名
 
 TEST_CASE("PurePath::is_absolute()") {
     CHECK(PurePath("c:/a/b").is_absolute() == true);
+    CHECK(PurePath("c:/a/b/").is_absolute() == true);
     CHECK(PurePath("/a/b").is_absolute() == true);
     CHECK(PurePath("./a/b").is_absolute() == false);
     CHECK(PurePath("./").is_absolute() == false);
