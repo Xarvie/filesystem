@@ -50,7 +50,7 @@
 
 #define os_path PurePath()
 #define __file__  PurePath(__FILE__).basename()
-
+#include <iostream>
 class PurePath {
 public:
     enum ProtoType {
@@ -112,9 +112,13 @@ public:
     explicit PurePath(const std::string &c);
 
     PurePath(const char *c);
-
+    ~PurePath()
+    {
+//        std::cout << this->parts[0] << std::endl;
+    }
     PurePath(const PurePath &c);
-
+    PurePath operator+(const PurePath& path);
+    PurePath& operator+=(const PurePath& path);
     PurePath &joinpath_(const PurePath &p);
 
     bool has_root_directory() const;
@@ -133,7 +137,7 @@ public:
 
     bool current_path(const PurePath &p) noexcept;
 
-    PurePath abspath(const PurePath &p);
+//    PurePath abspath(const PurePath &p);
 
     std::string basename() const;
 
@@ -280,13 +284,15 @@ public:
 
 
     void PurePath2(const std::string &c) {
-        PurePath::join2(this->parts, this->protoHead, this->protoType, c);
+        PurePath::join(this->parts, this->protoHead, this->protoType, c);
     }
 
-    static void join(PurePath::NormalRet &a, const std::string &s);
-
     static void
-    join2(std::vector<std::string> &strs, std::string &protoHead, ProtoType &protoType, const std::string &s);
+    join(std::vector<std::string> &strs, std::string &protoHead, ProtoType &protoType, const std::string &s);
+    static void
+    join(std::vector<std::string> &strs, std::string &protoHead, ProtoType &protoType, const PurePath &path);
+
+
 
     template<typename... TAIL>
     void PurePath2(const std::string &v, TAIL... args) {
@@ -343,18 +349,12 @@ public:
     std::string with_stem(const std::string &str);
 
     std::string with_suffix(const std::string &str);
-
-    template<typename T>
-    PurePath &joinpath(const T &v) {
-        return joinpath_(v);
-    }
-
-    template<typename T, typename... TAIL>
-    PurePath &joinpath(const T &v, TAIL... args) {
-        joinpath(v);
-        return joinpath(args...);
-    }
 };
+
+inline bool operator==(const PurePath& left, const PurePath& right) {
+    bool ret = (left.parts == right.parts);
+    return ret;
+}
 
 class Path {
 public:

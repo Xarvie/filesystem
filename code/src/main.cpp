@@ -192,6 +192,40 @@ TEST_CASE("PurePath()") {
     CHECK(PurePath("\\\\", "aaaa", "cccc/", "dddd\\").parts == PurePath("\\\\aaaa\\cccc\\dddd").parts);
 }
 
+TEST_CASE("operator=") {
+    CHECK(PurePath(R"(./a\b\c\)").asPosix() == R"(a/b/c)");
+    CHECK(PurePath(R"(a\b\c\)").asPosix() == R"(a/b/c)");
+    CHECK(PurePath(R"(a/b\c/)").asPosix() == R"(a/b/c)");
+
+    CHECK(PurePath(R"(./a\b\skip\..\c\)").asPosix() == R"(a/b/c)");
+    CHECK(PurePath(R"(a\skip\..\b\c\)").asPosix() == R"(a/b/c)");
+    CHECK(PurePath(R"(a\skip\../b\c/)").asPosix() == R"(a/b/c)");
+
+    CHECK((PurePath(R"(c:/a/b/c/)") == R"(c:\a\b\c)") == true);
+    CHECK((PurePath(R"(\a\b\c\)") == R"(/a/b/c)") == true);
+    CHECK((PurePath(R"(/a/b/c/)") == R"(/a/b/c)") == true);
+    CHECK((PurePath(R"(c:\a\b\c\)") == R"(c:\a\b\c)") == true);
+    CHECK((PurePath(R"(c:/a\b\c\)") == R"(c:\a\b\c)") == true);
+    CHECK((PurePath(R"(c:/a\b\c/)") == R"(c:\a\b\c)") == true);
+
+    CHECK((PurePath(R"(file:///c:/Windows)") == R"(file:///c:/Windows)") == true);
+    CHECK((PurePath(R"(file:///c:/Windows/)") == R"(file:///c:/Windows)") == true);
+    CHECK((PurePath(R"(file:///etc/local.d)") == R"(file:///etc/local.d)") == true);
+    CHECK((PurePath(R"(file:///etc/local.d/)") == R"(file:///etc/local.d)") == true);
+    CHECK((PurePath(R"(file:///etc/abc/../local.d/)") == R"(file:///etc/local.d)") == true);
+
+    CHECK((PurePath(R"(\\a\b\c)") == R"(\\a\b\c)") == true);
+
+    CHECK((PurePath(R"(http://www.a.com/b\c/)") == R"(http://www.a.com/b/c)") == true);
+    CHECK((PurePath(R"(https://www.a.com/b\c)") == R"(https://www.a.com/b/c)") == true);
+
+    CHECK((PurePath(R"(ftp://www.a.com/b\c/)") == R"(ftp://www.a.com/b/c)") == true);
+    CHECK((PurePath(R"(sftp://www.a.com/b\c)") == R"(sftp://www.a.com/b/c)") == true);
+
+    CHECK((PurePath(R"(ftp://localhost/b\c/)") == R"(ftp://localhost/b/c)") == true);
+    CHECK((PurePath(R"(sftp://127.0.0.1/b\c)") == R"(sftp://127.0.0.1/b/c)") == true);
+}
+
 TEST_CASE("PurePath::str()") {
     CHECK(PurePath(R"(./a\b\c\)").asPosix().str() == R"(a/b/c)");
     CHECK(PurePath(R"(a\b\c\)").asPosix().str() == R"(a/b/c)");

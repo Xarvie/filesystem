@@ -50,7 +50,7 @@ void toPosixSeparator(std::string &str) {
 
 PurePath::PurePath(const std::string &c) {
     PurePath::NormalRet ret;
-    PurePath::join(ret, c);
+    PurePath::join(ret.strs, ret.protoHead, ret.protoType, c);
     this->parts = ret.strs;
     this->protoType = ret.protoType;
     this->protoHead = ret.protoHead;
@@ -66,31 +66,29 @@ bool isAbs(const PurePath::NormalRet &ret) {
 
 PurePath::PurePath(const char *c) {
     PurePath::NormalRet ret;
-    PurePath::join(ret, c);
+    PurePath::join(ret.strs, ret.protoHead, ret.protoType, std::string(c));
     this->parts = ret.strs;
     this->protoType = ret.protoType;
     this->protoHead = ret.protoHead;
+}
+PurePath PurePath::operator+(const PurePath& path) {
+    auto ret = path;
+    join(ret.parts, ret.protoHead, ret.protoType, path);
+    return ret;
+}
+
+PurePath& PurePath::operator+=(const PurePath& path) {
+    join(this->parts, this->protoHead, this->protoType, path);
+    return *this;
 }
 
 PurePath::PurePath(const PurePath &c) {
     this->_path = c._path;
 }
 
-void PurePath::join(PurePath::NormalRet &sPath, const std::string &s) {
-    auto ret = normal(s);
-    if (ret.strs.empty())
-        return;
-    if (sPath.strs.empty()) {
-        sPath = ret;
-    } else if (isAbs(ret)) {
-        return;
-    } else {
-        sPath.strs.insert(sPath.strs.end(), ret.strs.begin(), ret.strs.end());
-    }
-}
 
 void
-PurePath::join2(std::vector<std::string> &strs, std::string &protoHead, ProtoType &protoType, const std::string &s) {
+PurePath::join(std::vector<std::string> &strs, std::string &protoHead, ProtoType &protoType, const std::string &s) {
     auto ret = normal(s);
     if (ret.strs.empty())
         return;
@@ -105,22 +103,23 @@ PurePath::join2(std::vector<std::string> &strs, std::string &protoHead, ProtoTyp
     }
 }
 
-
-PurePath &PurePath::joinpath_(const PurePath &p) {
-    if (this->empty()) {
-        *this = p;
-        return *this;
+void
+PurePath::join(std::vector<std::string> &strs, std::string &protoHead, ProtoType &protoType, const PurePath &path) {
+    PurePath::NormalRet ret;
+    ret.strs = path.parts;
+    ret.protoType = path.protoType;
+    ret.protoHead = path.protoHead;
+    if (ret.strs.empty())
+        return;
+    if (strs.empty()) {
+        strs = ret.strs;
+        protoHead = ret.protoHead;
+        protoType = ret.protoType;
+    } else if (isAbs(ret)) {
+        return;
+    } else {
+        strs.insert(strs.end(), ret.strs.begin(), ret.strs.end());
     }
-    if (!_path.empty() && _path[_path.length() - 1] != preferred_separator /*&& _path[_path.length() - 1] != ':'*/) {
-        _path += preferred_separator;
-    }
-    if (p.empty()) {
-        // was: if ((!has_root_directory() && is_absolute()) || has_filename())
-        return *this;
-    }
-
-    this->_path += p._path;
-    return *this;
 }
 
 size_t PurePath::root_name_length() const noexcept {
@@ -237,52 +236,52 @@ std::string PurePath::basename() const {
 //    return path2;
 }
 
-PurePath PurePath::abspath(const PurePath &p) {
-
-#ifdef OS_WINDOWS
-    if (p.empty()) {
-        return PurePath().joinpath(abspath(current_path()), PurePath(""));
-    }
-    ULONG size = ::GetFullPathName(p.c_str(), 0, 0, 0);
-    if (size) {
-        std::vector<char_type> buf(size, 0);
-        ULONG s2 = GetFullPathName(p.c_str(), size, buf.data(), nullptr);
-        if (s2 && s2 < size) {
-            PurePath result = PurePath(std::string(buf.data(), s2));
-            if (p.basename() == ".") {
-                result = PurePath().joinpath(result, PurePath("."));
-            }
-            return result;
-        }
-    }
-    return PurePath();
-#else
-    path base = current_path(ec);
-    if (!ec) {
-        if (p.empty()) {
-            return base / p;
-        }
-        if (p.has_root_name()) {
-            if (p.has_root_directory()) {
-                return p;
-            }
-            else {
-                return p.root_name() / base.root_directory() / base.relative_path() / p.relative_path();
-            }
-        }
-        else {
-            if (p.has_root_directory()) {
-                return base.root_name() / p;
-            }
-            else {
-                return base / p;
-            }
-        }
-    }
-    ec = detail::make_system_error();
-    return path();
-#endif
-}
+//PurePath PurePath::abspath(const PurePath &p) {
+//
+//#ifdef OS_WINDOWS
+//    if (p.empty()) {
+//        return PurePath().joinpath(abspath(current_path()), PurePath(""));
+//    }
+//    ULONG size = ::GetFullPathName(p.c_str(), 0, 0, 0);
+//    if (size) {
+//        std::vector<char_type> buf(size, 0);
+//        ULONG s2 = GetFullPathName(p.c_str(), size, buf.data(), nullptr);
+//        if (s2 && s2 < size) {
+//            PurePath result = PurePath(std::string(buf.data(), s2));
+//            if (p.basename() == ".") {
+//                result = PurePath().joinpath(result, PurePath("."));
+//            }
+//            return result;
+//        }
+//    }
+//    return PurePath();
+//#else
+//    path base = current_path(ec);
+//    if (!ec) {
+//        if (p.empty()) {
+//            return base / p;
+//        }
+//        if (p.has_root_name()) {
+//            if (p.has_root_directory()) {
+//                return p;
+//            }
+//            else {
+//                return p.root_name() / base.root_directory() / base.relative_path() / p.relative_path();
+//            }
+//        }
+//        else {
+//            if (p.has_root_directory()) {
+//                return base.root_name() / p;
+//            }
+//            else {
+//                return base / p;
+//            }
+//        }
+//    }
+//    ec = detail::make_system_error();
+//    return path();
+//#endif
+//}
 
 void splitWithStl(const std::string &str, const char &pattern, std::vector<std::string> &resVec) {
     if (str.empty()) {
