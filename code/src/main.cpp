@@ -163,31 +163,6 @@ os.path.supports_unicode_filenames 	设置是否支持unicode路径名
 //    return 0;
 //}
 
-#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-
-#include "doctest.h"
-
-//TEST_CASE("PurePath()") {
-//    CHECK(PurePath("c:/").parts[0] == "c:");
-//    CHECK(PurePath("./").parts.size() == 0);
-//    CHECK(PurePath("bbbb").parts[0] == "bbbb");
-//    CHECK(PurePath("c:\\", "aaaa", "cccc/", "dddd\\").parts == PurePath("c:\\aaaa\\cccc\\dddd").parts);
-//    CHECK(PurePath("\\\\", "aaaa", "cccc/", "dddd\\").parts == PurePath("\\\\aaaa\\cccc\\dddd").parts);
-//}
-
-TEST_CASE("PurePath::is_absolute()") {
-    CHECK(PurePath("c:/a/b").is_absolute() == true);
-    CHECK(PurePath("c:/a/b/").is_absolute() == true);
-    CHECK(PurePath("/a/b").is_absolute() == true);
-    CHECK(PurePath("./a/b").is_absolute() == false);
-    CHECK(PurePath("./").is_absolute() == false);
-    CHECK(PurePath(".").is_absolute() == false);
-    CHECK(PurePath("./").parts.size() == 0);
-    CHECK(PurePath("bbbb").parts[0] == "bbbb");
-    CHECK(PurePath("c:\\", "aaaa", "cccc/", "dddd\\").parts == PurePath("c:\\aaaa\\cccc\\dddd").parts);
-    CHECK(PurePath("\\\\", "aaaa", "cccc/", "dddd\\").parts == PurePath("\\\\aaaa\\cccc\\dddd").parts);
-}
-
 //TEST_CASE("PurePath::exists") {
 //
 //    CHECK(PurePath::exists("c:\\")  == true);
@@ -200,3 +175,67 @@ TEST_CASE("PurePath::is_absolute()") {
 //    CHECK(PurePath::exists(" \t \r    C:\\Windows/System32\\notepad.exe \t \r") == true);
 //
 //}
+
+
+
+
+
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+
+#include "doctest.h"
+
+TEST_CASE("PurePath()") {
+    CHECK(PurePath("c:/").parts[0] == "c:");
+    CHECK(PurePath("./").parts.size() == 0);
+    CHECK(PurePath("bbbb").parts[0] == "bbbb");
+    CHECK(PurePath("c:\\", "aaaa", "cccc/", "dddd\\").parts == PurePath("c:\\aaaa\\cccc\\dddd").parts);
+    CHECK(PurePath("\\\\", "aaaa", "cccc/", "dddd\\").parts == PurePath("\\\\aaaa\\cccc\\dddd").parts);
+}
+
+TEST_CASE("PurePath::str()") {
+    CHECK(PurePath(R"(./a\b\c\)").asPosix().str() == R"(a/b/c)");
+    CHECK(PurePath(R"(a\b\c\)").asPosix().str() == R"(a/b/c)");
+    CHECK(PurePath(R"(a/b\c/)").asPosix().str() == R"(a/b/c)");
+
+    CHECK(PurePath(R"(./a\b\skip\..\c\)").asPosix().str() == R"(a/b/c)");
+    CHECK(PurePath(R"(a\skip\..\b\c\)").asPosix().str() == R"(a/b/c)");
+    CHECK(PurePath(R"(a\skip\../b\c/)").asPosix().str() == R"(a/b/c)");
+
+    CHECK(PurePath(R"(c:/a/b/c/)").str() == R"(c:\a\b\c)");
+    CHECK(PurePath(R"(\a\b\c\)").str() == R"(/a/b/c)");
+    CHECK(PurePath(R"(/a/b/c/)").str() == R"(/a/b/c)");
+    CHECK(PurePath(R"(c:\a\b\c\)").str() == R"(c:\a\b\c)");
+    CHECK(PurePath(R"(c:/a\b\c\)").str() == R"(c:\a\b\c)");
+    CHECK(PurePath(R"(c:/a\b\c/)").str() == R"(c:\a\b\c)");
+
+    CHECK(PurePath(R"(file:///c:/Windows)").str() == R"(file:///c:/Windows)");
+    CHECK(PurePath(R"(file:///c:/Windows/)").str() == R"(file:///c:/Windows)");
+    CHECK(PurePath(R"(file:///etc/local.d)").str() == R"(file:///etc/local.d)");
+    CHECK(PurePath(R"(file:///etc/local.d/)").str() == R"(file:///etc/local.d)");
+    CHECK(PurePath(R"(file:///etc/abc/../local.d/)").str() == R"(file:///etc/local.d)");
+
+    CHECK(PurePath(R"(\\a\b\c)").str() == R"(\\a\b\c)");
+
+    CHECK(PurePath(R"(http://www.a.com/b\c/)").str() == R"(http://www.a.com/b/c)");
+    CHECK(PurePath(R"(https://www.a.com/b\c)").str() == R"(https://www.a.com/b/c)");
+
+    CHECK(PurePath(R"(ftp://www.a.com/b\c/)").str() == R"(ftp://www.a.com/b/c)");
+    CHECK(PurePath(R"(sftp://www.a.com/b\c)").str() == R"(sftp://www.a.com/b/c)");
+
+    CHECK(PurePath(R"(ftp://localhost/b\c/)").str() == R"(ftp://localhost/b/c)");
+    CHECK(PurePath(R"(sftp://127.0.0.1/b\c)").str() == R"(sftp://127.0.0.1/b/c)");
+}
+
+TEST_CASE("PurePath::is_absolute()") {
+    CHECK(PurePath("file:///c:/Windows").is_absolute() == true);
+    CHECK(PurePath("c:/a/b").is_absolute() == true);
+    CHECK(PurePath("c:/a/b/").is_absolute() == true);
+    CHECK(PurePath("/a/b").is_absolute() == true);
+    CHECK(PurePath("./a/b").is_absolute() == false);
+    CHECK(PurePath("./").is_absolute() == false);
+    CHECK(PurePath(".").is_absolute() == false);
+    CHECK(PurePath("./").parts.size() == 0);
+    CHECK(PurePath("bbbb").parts[0] == "bbbb");
+    CHECK(PurePath("c:\\", "aaaa", "cccc/", "dddd\\").parts == PurePath("c:\\aaaa\\cccc\\dddd").parts);
+    CHECK(PurePath("\\\\", "aaaa", "cccc/", "dddd\\").parts == PurePath("\\\\aaaa\\cccc\\dddd").parts);
+}

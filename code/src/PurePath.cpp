@@ -36,16 +36,18 @@ void PurePath::toSystemSeparator() {
 
 void toWindowsSeparator(std::string &str) {
     for (auto &E :str) {
-        if (E == '\\' || E == '/')
+        if (E == '/')
             E = PurePath::preferred_separator;
     }
 }
+
 void toPosixSeparator(std::string &str) {
     for (auto &E :str) {
         if (E == '\\')
             E = PurePath::posix_separator;
     }
 }
+
 PurePath::PurePath(const std::string &c) {
     PurePath::NormalRet ret;
     PurePath::join(ret, c);
@@ -56,10 +58,9 @@ PurePath::PurePath(const std::string &c) {
 
 void parse(const std::string &_str) {
     std::string pathStr = _str;
-
 }
 
-bool isAbs(const PurePath::NormalRet& ret) {
+bool isAbs(const PurePath::NormalRet &ret) {
     return ret.protoType != PurePath::PROTO_TYPE_RELATIVE;
 }
 
@@ -75,30 +76,32 @@ PurePath::PurePath(const PurePath &c) {
     this->_path = c._path;
 }
 
-void PurePath::join(PurePath::NormalRet &sPath, const std::string& s) {
+void PurePath::join(PurePath::NormalRet &sPath, const std::string &s) {
     auto ret = normal(s);
-    if(ret.strs.empty())
-        return ;
-    if(sPath.strs.empty() && sPath.protoType == PROTO_TYPE_NULL) {
+    if (ret.strs.empty())
+        return;
+    if (sPath.strs.empty()) {
         sPath = ret;
-    }else if(isAbs(ret)){
-        return ;
-    }else {
-        sPath.strs.insert(sPath.strs.end(),ret.strs.begin(),ret.strs.end());
+    } else if (isAbs(ret)) {
+        return;
+    } else {
+        sPath.strs.insert(sPath.strs.end(), ret.strs.begin(), ret.strs.end());
     }
 }
-void PurePath::join2(std::vector<std::string>& strs, std::string& protoHead, ProtoType& protoType, const std::string& s) {
+
+void
+PurePath::join2(std::vector<std::string> &strs, std::string &protoHead, ProtoType &protoType, const std::string &s) {
     auto ret = normal(s);
-    if(ret.strs.empty())
-        return ;
-    if(strs.empty() && protoType==PROTO_TYPE_NULL) {
+    if (ret.strs.empty())
+        return;
+    if (strs.empty()) {
         strs = ret.strs;
         protoHead = ret.protoHead;
         protoType = ret.protoType;
-    }else if(isAbs(ret)){
-        return ;
-    }else {
-        strs.insert(strs.end(),ret.strs.begin(),ret.strs.end());
+    } else if (isAbs(ret)) {
+        return;
+    } else {
+        strs.insert(strs.end(), ret.strs.begin(), ret.strs.end());
     }
 }
 
@@ -146,7 +149,7 @@ bool PurePath::has_root_directory() const {
 }
 
 bool PurePath::is_absolute() const {
-    return protoType != PROTO_TYPE_RELATIVE && protoType!= PROTO_TYPE_NULL;
+    return protoType != PROTO_TYPE_RELATIVE;
 }
 
 bool PurePath::empty() const noexcept {
@@ -311,65 +314,72 @@ PurePath::NormalRet PurePath::normal(const std::string &s) {
     std::string root = "";
     std::string unc = "";
 
-    std::vector<std::string > tmpParts;
+    std::vector<std::string> tmpParts;
     tmpParts.clear();
     if (path.length() > 1 && path[0] == posix_separator && path[1] == posix_separator) {
-        //UNC      \\a\b\c
+        //UNC      \\a\b
         tmpParts.push_back({posix_separator, posix_separator});
         path = path.substr(2);
         ret.protoType = PROTO_TYPE_UNC;
 
-    }
-    else if (path.find(std::string("file:")+posix_separator+posix_separator+posix_separator) == 0) {
+    } else if (path.find(std::string("file:") + posix_separator + posix_separator + posix_separator) == 0) {
         //  file:///c:/Windows
-        path = path.substr(8);
-        tmpParts.push_back( std::string("file:")+posix_separator+posix_separator+posix_separator);
-        ret.protoType = PROTO_TYPE_FILE_URI_WINDOWS;
+        path = path.substr(7);
+        tmpParts.push_back(std::string("file:"));
 
-        if (path.length() > 2) {
-            if ((path[0] >= 'a' && path[0] <= 'z' || path[0] >= 'A' && path[0] <= 'Z') && path[1] == ':') {
-                disk = {path[0], path[1]};//"c:"
-                tmpParts.push_back({path[0], path[1]});
-                path = path.substr(2);
-                if (path.length() > 0 && path[0] == posix_separator) {
-                    tmpParts.push_back({path[0]});
-                    path = path.substr(1);
+
+        do {
+            if (path.length() > 3) {
+                if ((path[1] >= 'a' && path[1] <= 'z' || path[1] >= 'A' && path[1] <= 'Z') && path[2] == ':') {
+                    disk = {path[1], path[2]};//"c:"
+                    tmpParts.push_back({path[1], path[2]});
+                    path = path.substr(3);
+                    if (path.length() > 0 && path[0] == posix_separator) {
+                        tmpParts.push_back({path[0]});
+                        path = path.substr(1);
+                    } else {
+                        return ret; // abs only!
+                    }
+                    ret.protoType = PROTO_TYPE_FILE_URI_WINDOWS;
+                    break;
                 }
             }
-        }
-    }
-    else if(path.find(std::string("file:")+posix_separator+posix_separator) == 0)
-    {
-        //  file:///etc/abc  不是绝对路径就抛异常
-        tmpParts.push_back(std::string("file:")+posix_separator+posix_separator);
-        path = path.substr(7);
-        ret.protoType = PROTO_TYPE_FILE_URI_UNIX;
-    }
-    else if (path.find(std::string("http:")+posix_separator+posix_separator) == 0) {
-        tmpParts.push_back(std::string("http:")+posix_separator+posix_separator);
+
+            if (path.length() > 0) {
+                if (path[0] == '/') {
+                    tmpParts.push_back({path[0]});
+                    path = path.substr(1);
+                    ret.protoType = PROTO_TYPE_FILE_URI_UNIX;
+                } else {
+                    return ret;// abs only!
+                }
+            }
+        } while (false);
+    } else if (path.find(std::string("http:") + posix_separator + posix_separator) == 0) {
+        tmpParts.push_back(std::string("http:") + posix_separator + posix_separator);
         path = path.substr(7);
         ret.protoType = PROTO_TYPE_HTTP;
         //  http://a.com/
 
-    }
-    else if (path.find(std::string("https:")+posix_separator+posix_separator) == 0) {
-        tmpParts.push_back(std::string("https:")+posix_separator+posix_separator);
+    } else if (path.find(std::string("https:") + posix_separator + posix_separator) == 0) {
+        tmpParts.push_back(std::string("https:") + posix_separator + posix_separator);
         path = path.substr(8);
         ret.protoType = PROTO_TYPE_HTTPS;
         //  https://a.com/
 
-    } else if (path.find(std::string("sftp:")+posix_separator+posix_separator) == 0) {
+    } else if (path.find(std::string("sftp:") + posix_separator + posix_separator) == 0) {
         //  sftp://
         path = path.substr(7);
-        tmpParts.push_back(std::string("sftp:")+posix_separator+posix_separator);
+        tmpParts.push_back(std::string("sftp:") + posix_separator + posix_separator);
         ret.protoType = PROTO_TYPE_SFTP;
-    } else if (path.find(std::string("ftp:")+posix_separator+posix_separator) == 0) {
+    } else if (path.find(std::string("ftp:") + posix_separator + posix_separator) == 0) {
         //  ftp://
-        tmpParts.push_back(std::string("ftp:")+posix_separator+posix_separator);
+        tmpParts.push_back(std::string("ftp:") + posix_separator + posix_separator);
         path = path.substr(6);
         ret.protoType = PROTO_TYPE_FTP;
-    } else if (path.length() > 1 && ((path[0] >= 'a' && path[0] <= 'z' || path[0] >= 'A' && path[0] <= 'Z') && path[1] == ':')) {
-         {
+    } else if (path.length() > 1 &&
+               ((path[0] >= 'a' && path[0] <= 'z' || path[0] >= 'A' && path[0] <= 'Z') && path[1] == ':')) {
+        {
             disk = {path[0], path[1]};//"c:"
             tmpParts.push_back({path[0], path[1]});
             path = path.substr(2);
@@ -438,8 +448,8 @@ PurePath::NormalRet PurePath::normal(const std::string &s) {
     ret.strs = tmpParts;
     ret.protoType = ret.protoType;
     ret.protoHead = ret.protoHead;
-    if(ret.protoType==PROTO_TYPE_NULL && !ret.strs.empty())
-        ret.protoType = PROTO_TYPE_RELATIVE;
+//    if (ret.protoType == PROTO_TYPE_RELATIVE && !ret.strs.empty())
+//        ret.protoType = PROTO_TYPE_RELATIVE;
     return ret;
     std::string retStr;
     for (auto &E: retVec) {
