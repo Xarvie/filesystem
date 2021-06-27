@@ -184,92 +184,104 @@ os.path.supports_unicode_filenames 	设置是否支持unicode路径名
 
 #include "doctest.h"
 
+
 TEST_CASE("PurePath()") {
-    CHECK(PurePath("c:/").parts[0] == "c:");
-    CHECK(PurePath("./").parts.size() == 0);
-    CHECK(PurePath("bbbb").parts[0] == "bbbb");
-    CHECK(PurePath("c:\\", "aaaa", "cccc/", "dddd\\").parts == PurePath("c:\\aaaa\\cccc\\dddd").parts);
-    CHECK(PurePath("\\\\", "aaaa", "cccc/", "dddd\\").parts == PurePath("\\\\aaaa\\cccc\\dddd").parts);
+	PurePath rr = R"(C:\Users\ftp\Desktop\SecureCRT_win64.7z)";
+	std::cout << rr.name() << std::endl;
+	std::cout << rr.suffix() << std::endl;
+	std::error_code ec;
+	file_status sls;
+	uintmax_t sz;
+	uintmax_t nhl;
+	time_t lwt;
+	status_ex(rr, ec, &sls, &sz, &nhl, &lwt ,0);
+
+		DWORD attr = GetFileAttributesW(rr.wstr().c_str());
+	CHECK(PurePath("c:/").parts[0] == "c:");
+	CHECK(PurePath("./").parts.size() == 0);
+	CHECK(PurePath("bbbb").parts[0] == "bbbb");
+	CHECK(PurePath("c:\\", "aaaa", "cccc/", "dddd\\").parts == PurePath("c:\\aaaa\\cccc\\dddd").parts);
+	CHECK(PurePath("\\\\", "aaaa", "cccc/", "dddd\\").parts == PurePath("\\\\aaaa\\cccc\\dddd").parts);
 }
 
 TEST_CASE("operator=") {
-    CHECK(PurePath(R"(./a\b\c\)").asPosix() == R"(a/b/c)");
-    CHECK(PurePath(R"(a\b\c\)").asPosix() == R"(a/b/c)");
-    CHECK(PurePath(R"(a/b\c/)").asPosix() == R"(a/b/c)");
+	CHECK(PurePath(R"(./a\b\c\)").asPosix() == R"(a/b/c)");
+	CHECK(PurePath(R"(a\b\c\)").asPosix() == R"(a/b/c)");
+	CHECK(PurePath(R"(a/b\c/)").asPosix() == R"(a/b/c)");
 
-    CHECK(PurePath(R"(./a\b\skip\..\c\)").asPosix() == R"(a/b/c)");
-    CHECK(PurePath(R"(a\skip\..\b\c\)").asPosix() == R"(a/b/c)");
-    CHECK(PurePath(R"(a\skip\../b\c/)").asPosix() == R"(a/b/c)");
+	CHECK(PurePath(R"(./a\b\skip\..\c\)").asPosix() == R"(a/b/c)");
+	CHECK(PurePath(R"(a\skip\..\b\c\)").asPosix() == R"(a/b/c)");
+	CHECK(PurePath(R"(a\skip\../b\c/)").asPosix() == R"(a/b/c)");
 
-    CHECK((PurePath(R"(c:/a/b/c/)") == R"(c:\a\b\c)") == true);
-    CHECK((PurePath(R"(\a\b\c\)") == R"(/a/b/c)") == true);
-    CHECK((PurePath(R"(/a/b/c/)") == R"(/a/b/c)") == true);
-    CHECK((PurePath(R"(c:\a\b\c\)") == R"(c:\a\b\c)") == true);
-    CHECK((PurePath(R"(c:/a\b\c\)") == R"(c:\a\b\c)") == true);
-    CHECK((PurePath(R"(c:/a\b\c/)") == R"(c:\a\b\c)") == true);
+	CHECK((PurePath(R"(c:/a/b/c/)") == R"(c:\a\b\c)") == true);
+	CHECK((PurePath(R"(\a\b\c\)") == R"(/a/b/c)") == true);
+	CHECK((PurePath(R"(/a/b/c/)") == R"(/a/b/c)") == true);
+	CHECK((PurePath(R"(c:\a\b\c\)") == R"(c:\a\b\c)") == true);
+	CHECK((PurePath(R"(c:/a\b\c\)") == R"(c:\a\b\c)") == true);
+	CHECK((PurePath(R"(c:/a\b\c/)") == R"(c:\a\b\c)") == true);
 
-    CHECK((PurePath(R"(file:///c:/Windows)") == R"(file:///c:/Windows)") == true);
-    CHECK((PurePath(R"(file:///c:/Windows/)") == R"(file:///c:/Windows)") == true);
-    CHECK((PurePath(R"(file:///etc/local.d)") == R"(file:///etc/local.d)") == true);
-    CHECK((PurePath(R"(file:///etc/local.d/)") == R"(file:///etc/local.d)") == true);
-    CHECK((PurePath(R"(file:///etc/abc/../local.d/)") == R"(file:///etc/local.d)") == true);
+	CHECK((PurePath(R"(file:///c:/Windows)") == R"(file:///c:/Windows)") == true);
+	CHECK((PurePath(R"(file:///c:/Windows/)") == R"(file:///c:/Windows)") == true);
+	CHECK((PurePath(R"(file:///etc/local.d)") == R"(file:///etc/local.d)") == true);
+	CHECK((PurePath(R"(file:///etc/local.d/)") == R"(file:///etc/local.d)") == true);
+	CHECK((PurePath(R"(file:///etc/abc/../local.d/)") == R"(file:///etc/local.d)") == true);
 
-    CHECK((PurePath(R"(\\a\b\c)") == R"(\\a\b\c)") == true);
+	CHECK((PurePath(R"(\\a\b\c)") == R"(\\a\b\c)") == true);
 
-    CHECK((PurePath(R"(http://www.a.com/b\c/)") == R"(http://www.a.com/b/c)") == true);
-    CHECK((PurePath(R"(https://www.a.com/b\c)") == R"(https://www.a.com/b/c)") == true);
+	CHECK((PurePath(R"(http://www.a.com/b\c/)") == R"(http://www.a.com/b/c)") == true);
+	CHECK((PurePath(R"(https://www.a.com/b\c)") == R"(https://www.a.com/b/c)") == true);
 
-    CHECK((PurePath(R"(ftp://www.a.com/b\c/)") == R"(ftp://www.a.com/b/c)") == true);
-    CHECK((PurePath(R"(sftp://www.a.com/b\c)") == R"(sftp://www.a.com/b/c)") == true);
+	CHECK((PurePath(R"(ftp://www.a.com/b\c/)") == R"(ftp://www.a.com/b/c)") == true);
+	CHECK((PurePath(R"(sftp://www.a.com/b\c)") == R"(sftp://www.a.com/b/c)") == true);
 
-    CHECK((PurePath(R"(ftp://localhost/b\c/)") == R"(ftp://localhost/b/c)") == true);
-    CHECK((PurePath(R"(sftp://127.0.0.1/b\c)") == R"(sftp://127.0.0.1/b/c)") == true);
+	CHECK((PurePath(R"(ftp://localhost/b\c/)") == R"(ftp://localhost/b/c)") == true);
+	CHECK((PurePath(R"(sftp://127.0.0.1/b\c)") == R"(sftp://127.0.0.1/b/c)") == true);
 }
 
 TEST_CASE("PurePath::str()") {
-    CHECK(PurePath(R"(./a\b\c\)").asPosix().str() == R"(a/b/c)");
-    CHECK(PurePath(R"(a\b\c\)").asPosix().str() == R"(a/b/c)");
-    CHECK(PurePath(R"(a/b\c/)").asPosix().str() == R"(a/b/c)");
+	CHECK(PurePath(R"(./a\b\c\)").asPosix().str() == R"(a/b/c)");
+	CHECK(PurePath(R"(a\b\c\)").asPosix().str() == R"(a/b/c)");
+	CHECK(PurePath(R"(a/b\c/)").asPosix().str() == R"(a/b/c)");
 
-    CHECK(PurePath(R"(./a\b\skip\..\c\)").asPosix().str() == R"(a/b/c)");
-    CHECK(PurePath(R"(a\skip\..\b\c\)").asPosix().str() == R"(a/b/c)");
-    CHECK(PurePath(R"(a\skip\../b\c/)").asPosix().str() == R"(a/b/c)");
+	CHECK(PurePath(R"(./a\b\skip\..\c\)").asPosix().str() == R"(a/b/c)");
+	CHECK(PurePath(R"(a\skip\..\b\c\)").asPosix().str() == R"(a/b/c)");
+	CHECK(PurePath(R"(a\skip\../b\c/)").asPosix().str() == R"(a/b/c)");
 
-    CHECK(PurePath(R"(c:/a/b/c/)").str() == R"(c:\a\b\c)");
-    CHECK(PurePath(R"(\a\b\c\)").str() == R"(/a/b/c)");
-    CHECK(PurePath(R"(/a/b/c/)").str() == R"(/a/b/c)");
-    CHECK(PurePath(R"(c:\a\b\c\)").str() == R"(c:\a\b\c)");
-    CHECK(PurePath(R"(c:/a\b\c\)").str() == R"(c:\a\b\c)");
-    CHECK(PurePath(R"(c:/a\b\c/)").str() == R"(c:\a\b\c)");
+	CHECK(PurePath(R"(c:/a/b/c/)").str() == R"(c:\a\b\c)");
+	CHECK(PurePath(R"(\a\b\c\)").str() == R"(/a/b/c)");
+	CHECK(PurePath(R"(/a/b/c/)").str() == R"(/a/b/c)");
+	CHECK(PurePath(R"(c:\a\b\c\)").str() == R"(c:\a\b\c)");
+	CHECK(PurePath(R"(c:/a\b\c\)").str() == R"(c:\a\b\c)");
+	CHECK(PurePath(R"(c:/a\b\c/)").str() == R"(c:\a\b\c)");
 
-    CHECK(PurePath(R"(file:///c:/Windows)").str() == R"(file:///c:/Windows)");
-    CHECK(PurePath(R"(file:///c:/Windows/)").str() == R"(file:///c:/Windows)");
-    CHECK(PurePath(R"(file:///etc/local.d)").str() == R"(file:///etc/local.d)");
-    CHECK(PurePath(R"(file:///etc/local.d/)").str() == R"(file:///etc/local.d)");
-    CHECK(PurePath(R"(file:///etc/abc/../local.d/)").str() == R"(file:///etc/local.d)");
+	CHECK(PurePath(R"(file:///c:/Windows)").str() == R"(file:///c:/Windows)");
+	CHECK(PurePath(R"(file:///c:/Windows/)").str() == R"(file:///c:/Windows)");
+	CHECK(PurePath(R"(file:///etc/local.d)").str() == R"(file:///etc/local.d)");
+	CHECK(PurePath(R"(file:///etc/local.d/)").str() == R"(file:///etc/local.d)");
+	CHECK(PurePath(R"(file:///etc/abc/../local.d/)").str() == R"(file:///etc/local.d)");
 
-    CHECK(PurePath(R"(\\a\b\c)").str() == R"(\\a\b\c)");
+	CHECK(PurePath(R"(\\a\b\c)").str() == R"(\\a\b\c)");
 
-    CHECK(PurePath(R"(http://www.a.com/b\c/)").str() == R"(http://www.a.com/b/c)");
-    CHECK(PurePath(R"(https://www.a.com/b\c)").str() == R"(https://www.a.com/b/c)");
+	CHECK(PurePath(R"(http://www.a.com/b\c/)").str() == R"(http://www.a.com/b/c)");
+	CHECK(PurePath(R"(https://www.a.com/b\c)").str() == R"(https://www.a.com/b/c)");
 
-    CHECK(PurePath(R"(ftp://www.a.com/b\c/)").str() == R"(ftp://www.a.com/b/c)");
-    CHECK(PurePath(R"(sftp://www.a.com/b\c)").str() == R"(sftp://www.a.com/b/c)");
+	CHECK(PurePath(R"(ftp://www.a.com/b\c/)").str() == R"(ftp://www.a.com/b/c)");
+	CHECK(PurePath(R"(sftp://www.a.com/b\c)").str() == R"(sftp://www.a.com/b/c)");
 
-    CHECK(PurePath(R"(ftp://localhost/b\c/)").str() == R"(ftp://localhost/b/c)");
-    CHECK(PurePath(R"(sftp://127.0.0.1/b\c)").str() == R"(sftp://127.0.0.1/b/c)");
+	CHECK(PurePath(R"(ftp://localhost/b\c/)").str() == R"(ftp://localhost/b/c)");
+	CHECK(PurePath(R"(sftp://127.0.0.1/b\c)").str() == R"(sftp://127.0.0.1/b/c)");
 }
 
 TEST_CASE("PurePath::is_absolute()") {
-    CHECK(PurePath("file:///c:/Windows").is_absolute() == true);
-    CHECK(PurePath("c:/a/b").is_absolute() == true);
-    CHECK(PurePath("c:/a/b/").is_absolute() == true);
-    CHECK(PurePath("/a/b").is_absolute() == true);
-    CHECK(PurePath("./a/b").is_absolute() == false);
-    CHECK(PurePath("./").is_absolute() == false);
-    CHECK(PurePath(".").is_absolute() == false);
-    CHECK(PurePath("./").parts.size() == 0);
-    CHECK(PurePath("bbbb").parts[0] == "bbbb");
-    CHECK(PurePath("c:\\", "aaaa", "cccc/", "dddd\\").parts == PurePath("c:\\aaaa\\cccc\\dddd").parts);
-    CHECK(PurePath("\\\\", "aaaa", "cccc/", "dddd\\").parts == PurePath("\\\\aaaa\\cccc\\dddd").parts);
+	CHECK(PurePath("file:///c:/Windows").is_absolute() == true);
+	CHECK(PurePath("c:/a/b").is_absolute() == true);
+	CHECK(PurePath("c:/a/b/").is_absolute() == true);
+	CHECK(PurePath("/a/b").is_absolute() == true);
+	CHECK(PurePath("./a/b").is_absolute() == false);
+	CHECK(PurePath("./").is_absolute() == false);
+	CHECK(PurePath(".").is_absolute() == false);
+	CHECK(PurePath("./").parts.size() == 0);
+	CHECK(PurePath("bbbb").parts[0] == "bbbb");
+	CHECK(PurePath("c:\\", "aaaa", "cccc/", "dddd\\").parts == PurePath("c:\\aaaa\\cccc\\dddd").parts);
+	CHECK(PurePath("\\\\", "aaaa", "cccc/", "dddd\\").parts == PurePath("\\\\aaaa\\cccc\\dddd").parts);
 }
