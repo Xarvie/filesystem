@@ -3,28 +3,46 @@
 //
 
 #include "PurePath.h"
+class StackBytes
+{
+public:
+	StackBytes() = delete;
+	StackBytes(void* p) :Ptr(p) {
+
+	}
+	~StackBytes() {
+		_freea(Ptr);
+	}
+
+	void * Ptr;
+};
+
+#define __AsciiToWide(lpa) (___A2W((LPWSTR)StackBytes(_malloca(strlen(lpa)*2+1)).Ptr, lpa, (lstrlenA(lpa)+1), CP_ACP))
+inline LPWSTR WINAPI ___A2W(LPWSTR lpw, LPCSTR lpa, int nChars, UINT acp) {
+	return((lpa&&lpw)?void(0):abort()), lpw[0] = 0, MultiByteToWideChar(acp, 0, lpa, -1, lpw, nChars), lpw;
+}
 
 PurePath::PurePath() {
 
 }
 
 std::string trimstr(std::string s) {
-    size_t n = s.find_last_not_of(" \r\n\t");
-    if (n != std::string::npos) {
-        s.erase(n + 1, s.size() - n);
-    }
-    n = s.find_first_not_of(" \r\n\t");
-    if (n != std::string::npos) {
-        s.erase(0, n);
-    }
-    return s;
+	size_t n = s.find_last_not_of(" \r\n\t");
+	if (n != std::string::npos) {
+		s.erase(n + 1, s.size() - n);
+	}
+	n = s.find_first_not_of(" \r\n\t");
+	if (n != std::string::npos) {
+		s.erase(0, n);
+	}
+	return s;
 }
 
 void PurePath::toSystemSeparator() {
-    for (auto &E :_path) {
-        if (E == '\\' || E == '/')
-            E = preferred_separator;
-    }
+	for (auto &E :_path) {
+		if (E == '\\' || E == '/')
+			E = preferred_separator;
+	}
 }
 
 //void toSystemSeparator2(std::string &str) {
@@ -35,185 +53,385 @@ void PurePath::toSystemSeparator() {
 //}
 
 void toWindowsSeparator(std::string &str) {
-    for (auto &E :str) {
-        if (E == '/')
-            E = PurePath::preferred_separator;
-    }
+	for (auto &E :str) {
+		if (E == '/')
+			E = PurePath::preferred_separator;
+	}
 }
 
 void toPosixSeparator(std::string &str) {
-    for (auto &E :str) {
-        if (E == '\\')
-            E = PurePath::posix_separator;
-    }
+	for (auto &E :str) {
+		if (E == '\\')
+			E = PurePath::posix_separator;
+	}
 }
 
 PurePath::PurePath(const std::string &c) {
-    PurePath::NormalRet ret;
-    PurePath::join(ret.strs, ret.protoHead, ret.protoType, c);
-    this->parts = ret.strs;
-    this->protoType = ret.protoType;
-    this->protoHead = ret.protoHead;
+	PurePath::NormalRet ret;
+	PurePath::join(ret.strs, ret.wstrs, ret.protoHead, ret.protoType, c);
+	this->parts = ret.strs;
+	this->protoType = ret.protoType;
+	this->protoHead = ret.protoHead;
 }
 
 void parse(const std::string &_str) {
-    std::string pathStr = _str;
+	std::string pathStr = _str;
 }
 
 bool isAbs(const PurePath::NormalRet &ret) {
-    return ret.protoType != PurePath::PROTO_TYPE_RELATIVE;
+	return ret.protoType != PurePath::PROTO_TYPE_RELATIVE;
 }
 
 PurePath::PurePath(const char *c) {
-    PurePath::NormalRet ret;
-    PurePath::join(ret.strs, ret.protoHead, ret.protoType, std::string(c));
-    this->parts = ret.strs;
-    this->protoType = ret.protoType;
-    this->protoHead = ret.protoHead;
-}
-PurePath PurePath::operator+(const PurePath& path) {
-    auto ret = path;
-    join(ret.parts, ret.protoHead, ret.protoType, path);
-    return ret;
+	PurePath::NormalRet ret;
+	PurePath::join(ret.strs, ret.wstrs, ret.protoHead, ret.protoType, std::string(c));
+	this->parts = ret.strs;
+	this->parts_w = ret.wstrs;
+	this->protoType = ret.protoType;
+	this->protoHead = ret.protoHead;
 }
 
-PurePath& PurePath::operator+=(const PurePath& path) {
-    join(this->parts, this->protoHead, this->protoType, path);
-    return *this;
+std::string PurePath::drive() const {
+
+}
+
+std::string PurePath::root() const {
+}
+
+std::string PurePath::anchor() const {
+
+}
+
+std::vector<std::string> PurePath::parents() const {
+
+}
+
+std::string PurePath::parent() const {
+
+}
+
+std::string PurePath::name() const {
+	int k = -1;
+	switch (protoType) {
+		case PROTO_TYPE_UNC: {
+			k = 2;
+			break;
+		}
+		case PROTO_TYPE_FILE_URI_WINDOWS: {
+			for (int i = parts.size() - 1; i >= 0; i--) {
+				if (std::string::npos != parts[i].find_first_of("/:\\")) {
+					k = i;
+					break;
+				}
+			}
+			break;
+		}
+		case PROTO_TYPE_FILE_URI_UNIX:
+			for (int i = parts.size() - 1; i >= 0; i--) {
+				if (std::string::npos != parts[i].find_first_of("/:\\")) {
+					k = i;
+					break;
+				}
+			}
+			break;
+		case PROTO_TYPE_HTTP:
+			k = 1;
+			break;
+		case PROTO_TYPE_HTTPS:
+			k = 1;
+			break;
+		case PROTO_TYPE_SFTP:
+			k = 1;
+			break;
+		case PROTO_TYPE_FTP:
+			k = 1;
+			break;
+		case PROTO_TYPE_WIN_DRIVER:
+			k = 0;
+			break;
+		case PROTO_TYPE_WIN_ABS:
+			for (int i = parts.size() - 1; i >= 0; i--) {
+				if (std::string::npos != parts[i].find_first_of("/:\\")) {
+					k = i;
+					break;
+				}
+			}
+			break;
+		case PROTO_TYPE_UNIX_ABS:
+			for (int i = parts.size() - 1; i >= 0; i--) {
+				if (std::string::npos != parts[i].find_first_of("/:\\")) {
+					k = i;
+					break;
+				}
+			}
+			break;
+		case PROTO_TYPE_RELATIVE:
+			for (int i = parts.size() - 1; i >= 0; i--) {
+				if (std::string::npos != parts[i].find_first_of("/:\\")) {
+					k = i;
+					break;
+				}
+			}
+			break;
+		default:
+			break;
+
+	}
+
+	int i = parts.size() - 1;
+	for ( ;i > k; i--) {
+		return parts[i];
+	}
+	return "";
+}
+
+//-----------------------------------------------------------------------------
+// [fs.class.file_status] class file_status
+// [fs.file_status.cons] constructors and destructor
+file_status::file_status() noexcept
+		: file_status(file_type::none)
+{
+}
+
+file_status::file_status(file_type ft, int16_t prms) noexcept
+		: _type(ft)
+		, _perms(prms)
+{
+}
+
+file_status::file_status(const file_status& other) noexcept
+		: _type(other._type)
+		, _perms(other._perms)
+{
+}
+
+file_status::file_status(file_status&& other) noexcept
+		: _type(other._type)
+		, _perms(other._perms)
+{
+}
+
+file_status::~file_status() {}
+
+// assignments:
+file_status& file_status::operator=(const file_status& rhs) noexcept
+{
+	_type = rhs._type;
+	_perms = rhs._perms;
+	return *this;
+}
+
+file_status& file_status::operator=(file_status&& rhs) noexcept
+{
+	_type = rhs._type;
+	_perms = rhs._perms;
+	return *this;
+}
+
+// [fs.file_status.mods] modifiers
+void file_status::type(file_type ft) noexcept
+{
+	_type = ft;
+}
+
+void file_status::permissions(int16_t prms) noexcept
+{
+	_perms = prms;
+}
+
+// [fs.file_status.obs] observers
+file_type file_status::type() const noexcept
+{
+	return _type;
+}
+
+int16_t file_status::permissions() const noexcept
+{
+	return _perms;
+}
+
+std::string PurePath::suffix() const {
+	std::string name_ = name();
+	if(name_.empty())
+		return "";
+
+    int pos = name_.find_last_of('.');
+    if (pos == name_.npos)
+        return "";
+    else
+        return name_.substr(pos, name_.length()-pos);
+}
+
+std::vector<std::string> PurePath::suffixes() const {
+
+}
+
+std::string PurePath::stem() const {
+
+}
+
+void updateParts(const std::vector<std::string> &s1, std::vector<std::wstring> &s2) {
+	s2.clear();
+	for (auto &E: s1) {
+		do {
+			s2.emplace_back(__AsciiToWide(E.c_str()));
+		} while (false);
+	}
+}
+
+PurePath PurePath::operator+(const PurePath &path) {
+	auto ret = path;
+	join(ret.parts, ret.parts_w, ret.protoHead, ret.protoType, path);
+	return ret;
+}
+
+PurePath &PurePath::operator+=(const PurePath &path) {
+	join(this->parts, this->parts_w, this->protoHead, this->protoType, path);
+	return *this;
+}
+
+std::wstring PurePath::wstr() const {
+	std::wstring ret = __AsciiToWide(str().c_str());
+	return ret;
 }
 
 PurePath::PurePath(const PurePath &c) {
-    this->_path = c._path;
-}
-
-
-void
-PurePath::join(std::vector<std::string> &strs, std::string &protoHead, ProtoType &protoType, const std::string &s) {
-    auto ret = normal(s);
-    if (ret.strs.empty())
-        return;
-    if (strs.empty()) {
-        strs = ret.strs;
-        protoHead = ret.protoHead;
-        protoType = ret.protoType;
-    } else if (isAbs(ret)) {
-        return;
-    } else {
-        strs.insert(strs.end(), ret.strs.begin(), ret.strs.end());
-    }
+	this->_path = c._path;
 }
 
 void
-PurePath::join(std::vector<std::string> &strs, std::string &protoHead, ProtoType &protoType, const PurePath &path) {
-    PurePath::NormalRet ret;
-    ret.strs = path.parts;
-    ret.protoType = path.protoType;
-    ret.protoHead = path.protoHead;
-    if (ret.strs.empty())
-        return;
-    if (strs.empty()) {
-        strs = ret.strs;
-        protoHead = ret.protoHead;
-        protoType = ret.protoType;
-    } else if (isAbs(ret)) {
-        return;
-    } else {
-        strs.insert(strs.end(), ret.strs.begin(), ret.strs.end());
-    }
+PurePath::join(std::vector<std::string> &strs, std::vector<std::wstring> &wstrs, std::string &protoHead,
+			   ProtoType &protoType, const std::string &s) {
+	auto ret = normal(s);
+	if (ret.strs.empty())
+		return;
+	if (strs.empty()) {
+		strs = ret.strs;
+		updateParts(strs, wstrs);
+		protoHead = ret.protoHead;
+		protoType = ret.protoType;
+	} else if (isAbs(ret)) {
+		return;
+	} else {
+		strs.insert(strs.end(), ret.strs.begin(), ret.strs.end());
+		updateParts(strs, wstrs);
+	}
+}
+
+void
+PurePath::join(std::vector<std::string> &strs, std::vector<std::wstring> &wstrs, std::string &protoHead,
+			   ProtoType &protoType, const PurePath &path) {
+	PurePath::NormalRet ret;
+	ret.strs = path.parts;
+	ret.protoType = path.protoType;
+	ret.protoHead = path.protoHead;
+	if (ret.strs.empty())
+		return;
+	if (strs.empty()) {
+		strs = ret.strs;
+		protoHead = ret.protoHead;
+		protoType = ret.protoType;
+		updateParts(strs, wstrs);
+	} else if (isAbs(ret)) {
+		return;
+	} else {
+		strs.insert(strs.end(), ret.strs.begin(), ret.strs.end());
+		updateParts(strs, wstrs);
+	}
 }
 
 size_t PurePath::root_name_length() const noexcept {
 #ifdef OS_WINDOWS
-    if (_path.length() >= _prefixLength + 2 && std::toupper(static_cast<unsigned char>(_path[_prefixLength])) >= 'A' &&
-        std::toupper(static_cast<unsigned char>(_path[_prefixLength])) <= 'Z' && _path[_prefixLength + 1] == ':') {
-        return 2;
-    }
+	if (_path.length() >= _prefixLength + 2 && std::toupper(static_cast<unsigned char>(_path[_prefixLength])) >= 'A' &&
+		std::toupper(static_cast<unsigned char>(_path[_prefixLength])) <= 'Z' && _path[_prefixLength + 1] == ':') {
+		return 2;
+	}
 #endif
-    if (_path.length() > _prefixLength + 2 && _path[_prefixLength] == preferred_separator &&
-        _path[_prefixLength + 1] == preferred_separator && _path[_prefixLength + 2] != preferred_separator &&
-        std::isprint(_path[_prefixLength + 2])) {
-        std::string::size_type pos = _path.find(preferred_separator, _prefixLength + 3);
-        if (pos == std::string::npos) {
-            return _path.length();
-        } else {
-            return pos;
-        }
-    }
-    return 0;
+	if (_path.length() > _prefixLength + 2 && _path[_prefixLength] == preferred_separator &&
+		_path[_prefixLength + 1] == preferred_separator && _path[_prefixLength + 2] != preferred_separator &&
+		std::isprint(_path[_prefixLength + 2])) {
+		std::string::size_type pos = _path.find(preferred_separator, _prefixLength + 3);
+		if (pos == std::string::npos) {
+			return _path.length();
+		} else {
+			return pos;
+		}
+	}
+	return 0;
 }
 
 bool PurePath::has_root_directory() const {
-    auto rootLen = _prefixLength + root_name_length();
-    return (_path.length() > rootLen && _path[rootLen] == preferred_separator);
+	auto rootLen = _prefixLength + root_name_length();
+	return (_path.length() > rootLen && _path[rootLen] == preferred_separator);
 }
 
 bool PurePath::is_absolute() const {
-    return protoType != PROTO_TYPE_RELATIVE;
+	return protoType != PROTO_TYPE_RELATIVE;
 }
 
 bool PurePath::empty() const noexcept {
-    return _path.empty();
+	return _path.empty();
 }
 
 bool PurePath::is_relative() const {
-    return !is_absolute();
+	return !is_absolute();
 }
 
 bool PurePath::has_root_name() const {
-    return root_name_length() > 0;
+	return root_name_length() > 0;
 }
 
 const PurePath::char_type *PurePath::c_str() const noexcept {
-    return this->_path.c_str();
+	return this->_path.c_str();
 }
 
 #ifdef OS_WINDOWS
 
 std::error_code make_system_error(uint32_t err) {
-    return std::error_code(err ? static_cast<int>(err) : static_cast<int>(::GetLastError()), std::system_category());
+	return std::error_code(err ? static_cast<int>(err) : static_cast<int>(::GetLastError()), std::system_category());
 }
 
 #else
 std::error_code make_system_error(int err)
-    {
-        return std::error_code(err ? err : errno, std::system_category());
-    }
+	{
+		return std::error_code(err ? err : errno, std::system_category());
+	}
 #endif
 
 PurePath PurePath::current_path() {
 //    ec.clear();
 #ifdef OS_WINDOWS
-    DWORD pathlen = ::GetCurrentDirectory(0, 0);
-    std::unique_ptr<char[]> buffer(new char[size_t(pathlen) + 1]);
-    if (::GetCurrentDirectory(pathlen, buffer.get()) == 0) {
+	DWORD pathlen = ::GetCurrentDirectory(0, 0);
+	std::unique_ptr<char[]> buffer(new char[size_t(pathlen) + 1]);
+	if (::GetCurrentDirectory(pathlen, buffer.get()) == 0) {
 //        ec = make_system_error(__LINE__);
-        return PurePath();
-    }
-    return PurePath(std::string(buffer.get()));
+		return PurePath();
+	}
+	return PurePath(std::string(buffer.get()));
 #else
-    size_t pathlen = static_cast<size_t>(std::max(int(::pathconf(".", _PC_PATH_MAX)), int(PATH_MAX)));
-    std::unique_ptr<char[]> buffer(new char[pathlen + 1]);
-    if (::getcwd(buffer.get(), pathlen) == nullptr) {
-        ec = detail::make_system_error();
-        return path();
-    }
-    return path(buffer.get());
+	size_t pathlen = static_cast<size_t>(std::max(int(::pathconf(".", _PC_PATH_MAX)), int(PATH_MAX)));
+	std::unique_ptr<char[]> buffer(new char[pathlen + 1]);
+	if (::getcwd(buffer.get(), pathlen) == nullptr) {
+		ec = detail::make_system_error();
+		return path();
+	}
+	return path(buffer.get());
 #endif
 }
 
 bool PurePath::current_path(const PurePath &p) noexcept {
 
 #ifdef OS_WINDOWS
-    if (!::SetCurrentDirectory(p.c_str())) {
-        return false;
-    }
+	if (!::SetCurrentDirectory(p.c_str())) {
+		return false;
+	}
 #else
-    if (::chdir(p.string().c_str()) == -1) {
-       return false;
-    }
+	if (::chdir(p.string().c_str()) == -1) {
+	   return false;
+	}
 #endif
 
-    return true;
+	return true;
 }
 
 
@@ -284,181 +502,181 @@ std::string PurePath::basename() const {
 //}
 
 void splitWithStl(const std::string &str, const char &pattern, std::vector<std::string> &resVec) {
-    if (str.empty()) {
-        return;
-    }
-    std::string strs = str + pattern;
+	if (str.empty()) {
+		return;
+	}
+	std::string strs = str + pattern;
 
-    size_t pos = strs.find(pattern);
-    size_t size = strs.size();
+	size_t pos = strs.find(pattern);
+	size_t size = strs.size();
 
-    while (pos != std::string::npos) {
-        std::string x = strs.substr(0, pos);
-        resVec.push_back(x);
-        strs = strs.substr(pos + 1, size);
-        pos = strs.find(pattern);
-    }
+	while (pos != std::string::npos) {
+		std::string x = strs.substr(0, pos);
+		resVec.push_back(x);
+		strs = strs.substr(pos + 1, size);
+		pos = strs.find(pattern);
+	}
 
 
 }
 
 PurePath::NormalRet PurePath::normal(const std::string &s) {
-    PurePath::NormalRet ret;
-    auto path = trimstr(s);
-    if (s.empty())
-        return ret;
-    toPosixSeparator(path);
-    //
-    std::string disk = "";
-    std::string root = "";
-    std::string unc = "";
+	PurePath::NormalRet ret;
+	auto path = trimstr(s);
+	if (s.empty())
+		return ret;
+	toPosixSeparator(path);
+	//
+	std::string disk = "";
+	std::string root = "";
+	std::string unc = "";
 
-    std::vector<std::string> tmpParts;
-    tmpParts.clear();
-    if (path.length() > 1 && path[0] == posix_separator && path[1] == posix_separator) {
-        //UNC      \\a\b
-        tmpParts.push_back({posix_separator, posix_separator});
-        path = path.substr(2);
-        ret.protoType = PROTO_TYPE_UNC;
+	std::vector<std::string> tmpParts;
+	tmpParts.clear();
+	if (path.length() > 1 && path[0] == posix_separator && path[1] == posix_separator) {
+		//UNC      \\a\b
+		tmpParts.push_back({posix_separator, posix_separator});
+		path = path.substr(2);
+		ret.protoType = PROTO_TYPE_UNC;
 
-    } else if (path.find(std::string("file:") + posix_separator + posix_separator + posix_separator) == 0) {
-        //  file:///c:/Windows
-        path = path.substr(7);
-        tmpParts.push_back(std::string("file:"));
+	} else if (path.find(std::string("file:") + posix_separator + posix_separator + posix_separator) == 0) {
+		//  file:///c:/Windows
+		path = path.substr(7);
+		tmpParts.push_back(std::string("file:"));
 
 
-        do {
-            if (path.length() > 3) {
-                if ((path[1] >= 'a' && path[1] <= 'z' || path[1] >= 'A' && path[1] <= 'Z') && path[2] == ':') {
-                    disk = {path[1], path[2]};//"c:"
-                    tmpParts.push_back({path[1], path[2]});
-                    path = path.substr(3);
-                    if (path.length() > 0 && path[0] == posix_separator) {
-                        tmpParts.push_back({path[0]});
-                        path = path.substr(1);
-                    } else {
-                        return ret; // abs only!
-                    }
-                    ret.protoType = PROTO_TYPE_FILE_URI_WINDOWS;
-                    break;
-                }
-            }
+		do {
+			if (path.length() > 3) {
+				if ((path[1] >= 'a' && path[1] <= 'z' || path[1] >= 'A' && path[1] <= 'Z') && path[2] == ':') {
+					disk = {path[1], path[2]};//"c:"
+					tmpParts.push_back({path[1], path[2]});
+					path = path.substr(3);
+					if (path.length() > 0 && path[0] == posix_separator) {
+						tmpParts.push_back({path[0]});
+						path = path.substr(1);
+					} else {
+						return ret; // abs only!
+					}
+					ret.protoType = PROTO_TYPE_FILE_URI_WINDOWS;
+					break;
+				}
+			}
 
-            if (path.length() > 0) {
-                if (path[0] == '/') {
-                    tmpParts.push_back({path[0]});
-                    path = path.substr(1);
-                    ret.protoType = PROTO_TYPE_FILE_URI_UNIX;
-                } else {
-                    return ret;// abs only!
-                }
-            }
-        } while (false);
-    } else if (path.find(std::string("http:") + posix_separator + posix_separator) == 0) {
-        tmpParts.push_back(std::string("http:") + posix_separator + posix_separator);
-        path = path.substr(7);
-        ret.protoType = PROTO_TYPE_HTTP;
-        //  http://a.com/
+			if (path.length() > 0) {
+				if (path[0] == '/') {
+					tmpParts.push_back({path[0]});
+					path = path.substr(1);
+					ret.protoType = PROTO_TYPE_FILE_URI_UNIX;
+				} else {
+					return ret;// abs only!
+				}
+			}
+		} while (false);
+	} else if (path.find(std::string("http:") + posix_separator + posix_separator) == 0) {
+		tmpParts.push_back(std::string("http:") + posix_separator + posix_separator);
+		path = path.substr(7);
+		ret.protoType = PROTO_TYPE_HTTP;
+		//  http://a.com/
 
-    } else if (path.find(std::string("https:") + posix_separator + posix_separator) == 0) {
-        tmpParts.push_back(std::string("https:") + posix_separator + posix_separator);
-        path = path.substr(8);
-        ret.protoType = PROTO_TYPE_HTTPS;
-        //  https://a.com/
+	} else if (path.find(std::string("https:") + posix_separator + posix_separator) == 0) {
+		tmpParts.push_back(std::string("https:") + posix_separator + posix_separator);
+		path = path.substr(8);
+		ret.protoType = PROTO_TYPE_HTTPS;
+		//  https://a.com/
 
-    } else if (path.find(std::string("sftp:") + posix_separator + posix_separator) == 0) {
-        //  sftp://
-        path = path.substr(7);
-        tmpParts.push_back(std::string("sftp:") + posix_separator + posix_separator);
-        ret.protoType = PROTO_TYPE_SFTP;
-    } else if (path.find(std::string("ftp:") + posix_separator + posix_separator) == 0) {
-        //  ftp://
-        tmpParts.push_back(std::string("ftp:") + posix_separator + posix_separator);
-        path = path.substr(6);
-        ret.protoType = PROTO_TYPE_FTP;
-    } else if (path.length() > 1 &&
-               ((path[0] >= 'a' && path[0] <= 'z' || path[0] >= 'A' && path[0] <= 'Z') && path[1] == ':')) {
-        {
-            disk = {path[0], path[1]};//"c:"
-            tmpParts.push_back({path[0], path[1]});
-            path = path.substr(2);
-            ret.protoType = PROTO_TYPE_WIN_DRIVER;
-            if (path.length() > 0 && path[0] == posix_separator) {
-                //"c:\"
-                tmpParts.push_back({path[0]});
-                path = path.substr(1);
-                ret.protoType = PROTO_TYPE_WIN_ABS;
-            }
-        }
-    } else if (path[0] == posix_separator) {
-        //      \a\b\c
-        tmpParts.push_back({path[0]});
-        path = path.substr(1);
-        ret.protoType = PROTO_TYPE_UNIX_ABS;
-    }
+	} else if (path.find(std::string("sftp:") + posix_separator + posix_separator) == 0) {
+		//  sftp://
+		path = path.substr(7);
+		tmpParts.push_back(std::string("sftp:") + posix_separator + posix_separator);
+		ret.protoType = PROTO_TYPE_SFTP;
+	} else if (path.find(std::string("ftp:") + posix_separator + posix_separator) == 0) {
+		//  ftp://
+		tmpParts.push_back(std::string("ftp:") + posix_separator + posix_separator);
+		path = path.substr(6);
+		ret.protoType = PROTO_TYPE_FTP;
+	} else if (path.length() > 1 &&
+			   ((path[0] >= 'a' && path[0] <= 'z' || path[0] >= 'A' && path[0] <= 'Z') && path[1] == ':')) {
+		{
+			disk = {path[0], path[1]};//"c:"
+			tmpParts.push_back({path[0], path[1]});
+			path = path.substr(2);
+			ret.protoType = PROTO_TYPE_WIN_DRIVER;
+			if (path.length() > 0 && path[0] == posix_separator) {
+				//"c:\"
+				tmpParts.push_back({path[0]});
+				path = path.substr(1);
+				ret.protoType = PROTO_TYPE_WIN_ABS;
+			}
+		}
+	} else if (path[0] == posix_separator) {
+		//      \a\b\c
+		tmpParts.push_back({path[0]});
+		path = path.substr(1);
+		ret.protoType = PROTO_TYPE_UNIX_ABS;
+	}
 
-    std::vector<std::string> vec;
-    splitWithStl(path, posix_separator, vec);
+	std::vector<std::string> vec;
+	splitWithStl(path, posix_separator, vec);
 
-    std::string end_posix_separator = "";
+	std::string end_posix_separator = "";
 
-    for (auto it = vec.begin(); it != vec.end();) {
+	for (auto it = vec.begin(); it != vec.end();) {
 
-        if ((*it == "." /*&& it != vec.begin()*/) || (*it).empty()) {
-            it = vec.erase(it++);
-            continue;
-        } else {
-            it++;
-        }
-    }
+		if ((*it == "." /*&& it != vec.begin()*/) || (*it).empty()) {
+			it = vec.erase(it++);
+			continue;
+		} else {
+			it++;
+		}
+	}
 
-    std::vector<std::string> retVec;
-    for (auto i = 0; i < vec.size(); i++) {
-        if (vec[i] == ".." && i == 0) {
-            retVec.push_back(vec[i]);
-            continue;
-        }
-        if (vec[i] == "..") {
-            if (i - 1 >= 0 && vec[i - 1] != ".." && vec[i - 1] != "\\" && vec[i - 1] != ".") {
+	std::vector<std::string> retVec;
+	for (auto i = 0; i < vec.size(); i++) {
+		if (vec[i] == ".." && i == 0) {
+			retVec.push_back(vec[i]);
+			continue;
+		}
+		if (vec[i] == "..") {
+			if (i - 1 >= 0 && vec[i - 1] != ".." && vec[i - 1] != "\\" && vec[i - 1] != ".") {
 
-                retVec.pop_back();
-                continue;
-            }
-            if (retVec.size() >= 2) {
+				retVec.pop_back();
+				continue;
+			}
+			if (retVec.size() >= 2) {
 
-                if (retVec[retVec.size() - 1 - 1] == "." && retVec.size() - 1 - 1 != 0) {
-                    retVec.pop_back();
-                    retVec.pop_back();
-                    continue;
-                }
+				if (retVec[retVec.size() - 1 - 1] == "." && retVec.size() - 1 - 1 != 0) {
+					retVec.pop_back();
+					retVec.pop_back();
+					continue;
+				}
 
-            } else {
+			} else {
 
-            }
-            retVec.push_back(vec[i]);
-            continue;
-        } else {
-            if (!vec[i].empty())
-                retVec.push_back(vec[i]);
-        }
-    }
-    for (auto &E: retVec)
-        tmpParts.push_back(E);
-    ret.strs = tmpParts;
-    ret.protoType = ret.protoType;
-    ret.protoHead = ret.protoHead;
+			}
+			retVec.push_back(vec[i]);
+			continue;
+		} else {
+			if (!vec[i].empty())
+				retVec.push_back(vec[i]);
+		}
+	}
+	for (auto &E: retVec)
+		tmpParts.push_back(E);
+	ret.strs = tmpParts;
+	ret.protoType = ret.protoType;
+	ret.protoHead = ret.protoHead;
 //    if (ret.protoType == PROTO_TYPE_RELATIVE && !ret.strs.empty())
 //        ret.protoType = PROTO_TYPE_RELATIVE;
-    return ret;
-    std::string retStr;
-    for (auto &E: retVec) {
-        retStr = retStr + E;
-        if (retStr[retStr.length() - 1] != posix_separator)
-            retStr += posix_separator;
-    }
-    while (!retStr.empty() && retStr[retStr.length() - 1] == posix_separator) {
-        retStr.pop_back();
-    }
+	return ret;
+	std::string retStr;
+	for (auto &E: retVec) {
+		retStr = retStr + E;
+		if (retStr[retStr.length() - 1] != posix_separator)
+			retStr += posix_separator;
+	}
+	while (!retStr.empty() && retStr[retStr.length() - 1] == posix_separator) {
+		retStr.pop_back();
+	}
 
 }
 
@@ -506,96 +724,96 @@ std::string PurePath::dirname(const std::string &strs) {
 #include <direct.h>
 
 BOOL CheckDiskExist(const std::string &path) {
-    ULONG uDriveMask = _getdrives();
-    if (uDriveMask == 0) {
-        return FALSE;
-    }
+	ULONG uDriveMask = _getdrives();
+	if (uDriveMask == 0) {
+		return FALSE;
+	}
 
-    uDriveMask >>= (int) (path[0] - 'A');
-    if (uDriveMask & 1) {
-        return TRUE;
-    }
-    return FALSE;
+	uDriveMask >>= (int) (path[0] - 'A');
+	if (uDriveMask & 1) {
+		return TRUE;
+	}
+	return FALSE;
 }
 
 bool FileIsExist(const char *pPath) {
-    std::string retStr = PurePath(pPath)._path;
-    if (retStr.length() == 2 && isalpha(retStr[0]) && retStr[1] == ':') {
-        return CheckDiskExist(retStr);
-    }
+	std::string retStr = PurePath(pPath)._path;
+	if (retStr.length() == 2 && isalpha(retStr[0]) && retStr[1] == ':') {
+		return CheckDiskExist(retStr);
+	}
 //    if (_access(pPath,0) != 0)
 //        return TPI_ERR_DIRNOEXIST;
 
-    WIN32_FIND_DATA finddata;
-    HANDLE hfile = FindFirstFile(retStr.c_str(), &finddata);
-    if (hfile == INVALID_HANDLE_VALUE) {
-        return false;
-    }
-    FindClose(hfile);
-    return true;
+	WIN32_FIND_DATA finddata;
+	HANDLE hfile = FindFirstFile(retStr.c_str(), &finddata);
+	if (hfile == INVALID_HANDLE_VALUE) {
+		return false;
+	}
+	FindClose(hfile);
+	return true;
 }
 
 bool PurePath::exists(const std::string &strs) {
 #ifdef OS_WINDOWS
-    return FileIsExist(strs.c_str());
+	return FileIsExist(strs.c_str());
 #else
 
-    return FileIsExist(strs.c_str());
+	return FileIsExist(strs.c_str());
 #endif
 }
 
 std::string &replace_all_ex(std::string &str, const std::string &old_value, const std::string &new_value) {
-    while (true) {
-        std::string::size_type pos(0);
-        if ((pos = str.find(old_value)) != std::string::npos)
-            str.replace(pos, old_value.length(), new_value);
-        else break;
-    }
-    return str;
+	while (true) {
+		std::string::size_type pos(0);
+		if ((pos = str.find(old_value)) != std::string::npos)
+			str.replace(pos, old_value.length(), new_value);
+		else break;
+	}
+	return str;
 }
 
 std::string &replace_all(std::string &str, const std::string &old_value, const std::string &new_value) {
-    for (std::string::size_type pos(0); pos != std::string::npos; pos += new_value.length()) {
-        if ((pos = str.find(old_value, pos)) != std::string::npos)
-            str.replace(pos, old_value.length(), new_value);
-        else break;
-    }
-    return str;
+	for (std::string::size_type pos(0); pos != std::string::npos; pos += new_value.length()) {
+		if ((pos = str.find(old_value, pos)) != std::string::npos)
+			str.replace(pos, old_value.length(), new_value);
+		else break;
+	}
+	return str;
 }
 
 std::string PurePath::expanduser(const std::string &pPath) {
-    std::string retStr = PurePath(pPath)._path;
+	std::string retStr = PurePath(pPath)._path;
 
-    if (retStr.find_first_of("~") == retStr.npos && retStr.find_first_of("%userprofile%") == retStr.npos)
-        return retStr;
+	if (retStr.find_first_of("~") == retStr.npos && retStr.find_first_of("%userprofile%") == retStr.npos)
+		return retStr;
 
-    if (retStr.empty())
-        return "";
+	if (retStr.empty())
+		return "";
 
-    std::vector<std::string> vec;
-    bool firstDot = false;
-    if (retStr[0] == preferred_separator) {
-        vec.push_back(std::string() += preferred_separator);
-    }
-    splitWithStl(retStr, preferred_separator, vec);
+	std::vector<std::string> vec;
+	bool firstDot = false;
+	if (retStr[0] == preferred_separator) {
+		vec.push_back(std::string() += preferred_separator);
+	}
+	splitWithStl(retStr, preferred_separator, vec);
 
 
-    std::string home = (getenv("USERPROFILE"));
-    if (home.empty())
-        return retStr;
-    std::string retstr2 = "";
-    for (int i = 0; i < vec.size(); i++) {
-        if (vec[i] == "~")
-            vec[i] = home;
-        else if (vec[i] == "%userprofile%")
-            vec[i] = home;
-        if (i != vec.size() - 1)
-            retstr2 = retstr2 + vec[i] + preferred_separator;
-        else
-            retstr2 = retstr2 + vec[i];
-    }
+	std::string home = (getenv("USERPROFILE"));
+	if (home.empty())
+		return retStr;
+	std::string retstr2 = "";
+	for (int i = 0; i < vec.size(); i++) {
+		if (vec[i] == "~")
+			vec[i] = home;
+		else if (vec[i] == "%userprofile%")
+			vec[i] = home;
+		if (i != vec.size() - 1)
+			retstr2 = retstr2 + vec[i] + preferred_separator;
+		else
+			retstr2 = retstr2 + vec[i];
+	}
 
-    return retstr2;
+	return retstr2;
 
 #ifdef OS_WINDOWS
 
@@ -605,38 +823,38 @@ std::string PurePath::expanduser(const std::string &pPath) {
 }
 
 std::string PurePath::expandvars(const std::string &pPath) {
-    std::string retStr = PurePath(pPath)._path;
+	std::string retStr = PurePath(pPath)._path;
 
-    if (retStr.find_first_of("~") == retStr.npos && retStr.find_first_of("%userprofile%") == retStr.npos)
-        return retStr;
+	if (retStr.find_first_of("~") == retStr.npos && retStr.find_first_of("%userprofile%") == retStr.npos)
+		return retStr;
 
-    if (retStr.empty())
-        return "";
+	if (retStr.empty())
+		return "";
 
-    std::vector<std::string> vec;
-    bool firstDot = false;
-    if (retStr[0] == preferred_separator) {
-        vec.push_back(std::string() += preferred_separator);
-    }
-    splitWithStl(retStr, preferred_separator, vec);
+	std::vector<std::string> vec;
+	bool firstDot = false;
+	if (retStr[0] == preferred_separator) {
+		vec.push_back(std::string() += preferred_separator);
+	}
+	splitWithStl(retStr, preferred_separator, vec);
 
 
-    std::string home = (getenv("USERPROFILE"));
-    if (home.empty())
-        return retStr;
-    std::string retstr2 = "";
-    for (int i = 0; i < vec.size(); i++) {
-        if (vec[i] == "~")
-            vec[i] = home;
-        else if (vec[i] == "%userprofile%")
-            vec[i] = home;
-        if (i != vec.size() - 1)
-            retstr2 = retstr2 + vec[i] + preferred_separator;
-        else
-            retstr2 = retstr2 + vec[i];
-    }
+	std::string home = (getenv("USERPROFILE"));
+	if (home.empty())
+		return retStr;
+	std::string retstr2 = "";
+	for (int i = 0; i < vec.size(); i++) {
+		if (vec[i] == "~")
+			vec[i] = home;
+		else if (vec[i] == "%userprofile%")
+			vec[i] = home;
+		if (i != vec.size() - 1)
+			retstr2 = retstr2 + vec[i] + preferred_separator;
+		else
+			retstr2 = retstr2 + vec[i];
+	}
 
-    return retstr2;
+	return retstr2;
 
 #ifdef OS_WINDOWS
 
