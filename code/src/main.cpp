@@ -36,6 +36,7 @@ os.path.walk(path, visit, arg) // 	遍历path，进入每个目录都调用visit
 os.path.supports_unicode_filenames 	设置是否支持unicode路径名
  *
  * */
+
 #include <iostream>
 #include "PurePath.h"
 #include <list>
