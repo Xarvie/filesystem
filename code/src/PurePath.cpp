@@ -372,10 +372,6 @@ bool PurePath::has_root_name() const {
     return root_name_length() > 0;
 }
 
-const PurePath::char_type *PurePath::c_str() const noexcept {
-    return this->_path.c_str();
-}
-
 #ifdef OS_WINDOWS
 
 std::error_code make_system_error(uint32_t err) {
@@ -411,16 +407,16 @@ PurePath PurePath::current_path() {
 }
 
 bool PurePath::current_path(const PurePath &p) noexcept {
-
-#ifdef OS_WINDOWS
-    if (!::SetCurrentDirectory(p.c_str())) {
-        return false;
-    }
-#else
-    if (::chdir(p.string().c_str()) == -1) {
-       return false;
-    }
-#endif
+//
+//#ifdef OS_WINDOWS
+//    if (!::SetCurrentDirectory(p.c_str())) {
+//        return false;
+//    }
+//#else
+//    if (::chdir(p.string().c_str()) == -1) {
+//       return false;
+//    }
+//#endif
 
     return true;
 }
@@ -971,7 +967,8 @@ std::string Path::open(int mode, int buffering, void *encoding, void *errors, vo
 std::string Path::owner() {
 }
 
-std::string Path::read_bytes() {
+std::vector<char> Path::read_bytes() {
+    this->readFile(this->_pp.str().c_str());
 }
 
 std::string Path::read_text(void *encoding, void *errors) {

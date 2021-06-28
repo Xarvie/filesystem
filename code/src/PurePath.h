@@ -137,8 +137,6 @@ public:
 
 	bool has_root_name() const;
 
-	const PurePath::char_type *c_str() const noexcept;
-
 	PurePath current_path();
 
 	bool current_path(const PurePath &p) noexcept;
@@ -733,7 +731,7 @@ public:
 
 	std::string owner();
 
-	std::string read_bytes();
+    std::vector<char> read_bytes();
 
 	std::string read_text(void *encoding = NULL, void *errors = NULL);
 
