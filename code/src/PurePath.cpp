@@ -1232,12 +1232,15 @@ int Path::writeFile(const char *str, const char *dataPtr, int size,
         int64_t allSize = size;
         int wlen = allSize;
         int flushBytes = 1024;
-        while (true) {
+        if(allSize % flushBytes) {
             int ret = std::fwrite(ptr, allSize % flushBytes, 1, f);
-            if (ret > 0)
-                break;
+            if (ret != 1) {
+                std::fclose(f);
+                return -1;
+            }
+            wlen -= allSize % flushBytes;
         }
-        wlen -= allSize % flushBytes;
+
         if (wlen > 0)
             while (true) {
                 int ret = std::fwrite(ptr + allSize - wlen, flushBytes, 1, f);
@@ -1245,6 +1248,11 @@ int Path::writeFile(const char *str, const char *dataPtr, int size,
                     wlen -= flushBytes;
                     if (wlen == 0)
                         break;
+                }
+                else{
+                    std::fclose(f);
+                    return -1;
+
                 }
             }
     }
@@ -1260,12 +1268,15 @@ int Path::writeFile2(FILE *f, const char *dataPtr, int size) {//rb+ write wb+ cl
         int64_t allSize = size;
         int wlen = allSize;
         int flushBytes = 1024;
-        while (true) {
+        if(allSize % flushBytes) {
             int ret = std::fwrite(ptr, allSize % flushBytes, 1, f);
-            if (ret > 0)
-                break;
+            if (ret != 1) {
+                std::fclose(f);
+                return -1;
+            }
+            wlen -= allSize % flushBytes;
         }
-        wlen -= allSize % flushBytes;
+
         if (wlen > 0)
             while (true) {
                 int ret = std::fwrite(ptr + allSize - wlen, flushBytes, 1, f);
@@ -1273,6 +1284,11 @@ int Path::writeFile2(FILE *f, const char *dataPtr, int size) {//rb+ write wb+ cl
                     wlen -= flushBytes;
                     if (wlen == 0)
                         break;
+                }
+                else{
+                    std::fclose(f);
+                    return -1;
+
                 }
             }
     }
