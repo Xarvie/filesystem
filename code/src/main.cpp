@@ -184,11 +184,18 @@ os.path.supports_unicode_filenames 	设置是否支持unicode路径名
 
 #include "doctest.h"
 
-
 TEST_CASE("PurePath()") {
-	PurePath rr = R"(C:\Users\ftp\Desktop\SecureCRT_win64.7z)";
+	PurePath rr = "";
 	std::cout << rr.name() << std::endl;
 	std::cout << rr.suffix() << std::endl;
+
+
+//	Path p = rr;
+//	p.fopen("w+");
+//    auto ppp = _wfopen(longPathTxt,L"rw");
+//	auto ret = p.fwrite("abc", 4, 1);
+//    p.fclose();
+
 	std::error_code ec;
 	file_status sls;
 	uintmax_t sz;

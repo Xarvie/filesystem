@@ -664,6 +664,10 @@ inline file_status status_ex(const PurePath& p, std::error_code& ec, file_status
 
 class Path {
 public:
+    Path(PurePath& pp){
+        this->_pp = pp;
+    }
+    PurePath _pp;
 	struct stat_result {
 		//os.stat_result(st_mode=33206, st_ino=9007199254766095, st_dev=3423312902, st_nlink=1, st_uid=0, st_gid=0, st_size=377733, st_atime=1624714487, st_mtime=1617370153, st_ctime=1617365121)
 		int st_mode;
@@ -757,6 +761,32 @@ public:
 	std::string cwd();
 
 	std::string home();
+
+    bool fopen(const char* mode );
+    int fclose();
+    int fflush();
+    void setbuf(char* buffer);
+    int setvbuf(char* buffer, int mode, std::size_t size);
+
+    std::size_t fread( void* buffer, std::size_t size, std::size_t count);
+    std::size_t fwrite( const void* buffer, std::size_t size, std::size_t count);
+    int fgetc();
+    int fputc(int ch);
+    char* fgets(char* str, int count);
+    int fputs(const char* str);
+
+    long ftell();
+    int fgetpos(std::fpos_t* pos );
+    int fseek(long offset, int origin);
+    int fsetpos(const std::fpos_t* pos);
+    void rewind();
+
+    static int remove(const char* fname);
+    static int rename(const char *old_filename, const char *new_filename);
+    static std::FILE* tmpfile();
+    static char* tmpnam( char* filename);
+
+    FILE* fp = nullptr;
 };
 
 #endif //EM_PUREPATH_H
