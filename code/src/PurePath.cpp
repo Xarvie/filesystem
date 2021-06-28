@@ -1024,26 +1024,23 @@ std::string Path::home() {
 }
 
 bool Path::fopen(const char *mode) {
-    if(this->fp != nullptr)
-    {
+    if (this->fp != nullptr) {
         std::fclose(this->fp);
         this->fp = nullptr;
     }
 
-    std::cout <<this->_pp.str().c_str() << std::endl;
-    FILE * tmpFP = std::fopen(this->_pp.str().c_str() ,mode);
-    if(tmpFP == nullptr)
+    std::cout << this->_pp.str().c_str() << std::endl;
+    FILE *tmpFP = std::fopen(this->_pp.str().c_str(), mode);
+    if (tmpFP == nullptr)
         return false;
     this->fp = tmpFP;
     return true;
 }
 
 int Path::fclose() {
-    if(this->fp != nullptr)
-    {
+    if (this->fp != nullptr) {
         auto ret = std::fclose(this->fp);
-        if(ret!=EOF)
-        {
+        if (ret != EOF) {
             this->fp = nullptr;
             return ret;
         }
@@ -1053,11 +1050,9 @@ int Path::fclose() {
 }
 
 int Path::fflush() {
-    if(this->fp != nullptr)
-    {
+    if (this->fp != nullptr) {
         auto ret = std::fflush(this->fp);
-        if(ret!=EOF)
-        {
+        if (ret != EOF) {
             this->fp = nullptr;
             return ret;
         }
@@ -1075,7 +1070,7 @@ int Path::setvbuf(char *buffer, int mode, std::size_t size) {
 }
 
 std::size_t Path::fread(void *buffer, std::size_t size, std::size_t count) {
-   return std::fread(buffer, size, count, this->fp);
+    return std::fread(buffer, size, count, this->fp);
 
 }
 
@@ -1134,4 +1129,129 @@ std::FILE *Path::tmpfile() {
 
 char *Path::tmpnam(char *filename) {
     return std::tmpnam(filename);
+}
+
+std::vector<char> Path::readFile(const char *str) {
+    FILE *f = std::fopen(str, "rb");
+    if (f == NULL)
+        return std::vector<char>();
+    if (std::fseek(f, 0, SEEK_END))
+        return std::vector<char>();
+    size_t size = std::ftell(f);
+    if (std::fseek(f, 0, SEEK_SET))
+        return std::vector<char>();
+    if (size == -1L || size == 0)
+        return std::vector<char>();
+    std::vector<char> vecData_(size);
+    {
+        char *ptr = vecData_.data();
+        int64_t allSize = size;
+        int wlen = allSize;
+        int flushBytes = 1024;
+        while (true) {
+            int ret = std::fread(ptr, allSize % flushBytes, 1, f);
+            if (ret > 0)
+                break;
+        }
+        wlen -= allSize % flushBytes;
+        if (wlen > 0)
+            while (true) {
+                int ret = std::fread(ptr + allSize - wlen, flushBytes, 1, f);
+                if (ret > 0) {
+                    wlen -= flushBytes;
+                    if (wlen == 0)
+                        break;
+                }
+            }
+    }
+    std::fclose(f);
+    return vecData_;
+}
+
+std::vector<char> Path::readFile2(FILE *fp, size_t size) {
+    if (fp == NULL)
+        return std::vector<char>();
+    if (size == -1L || size == 0)
+        return std::vector<char>();
+    std::vector<char> vecData_(size);
+    {
+        char *ptr = vecData_.data();
+        int64_t allSize = size;
+        int wlen = allSize;
+        int flushBytes = 1024;
+        while (true) {
+            int ret = std::fread(ptr, allSize % flushBytes, 1, fp);
+            if (ret > 0)
+                break;
+        }
+
+        wlen -= allSize % flushBytes;
+        if (wlen > 0)
+            while (true) {
+                int ret = std::fread(ptr + allSize - wlen, flushBytes, 1, fp);
+                if (ret > 0) {
+                    wlen -= flushBytes;
+                    if (wlen == 0)
+                        break;
+                }
+            }
+    }
+    return vecData_;
+}
+
+int Path::writeFile(const char *str, const char *dataPtr, int size,
+                    const char *mode) {//rb+ write wb+ cleanwrite ab+ append
+    FILE *f = std::fopen(str, mode);
+    if (f == NULL || size < 0)
+        return -1;
+    if (size > 0) {
+        const char *ptr = dataPtr;
+        int64_t allSize = size;
+        int wlen = allSize;
+        int flushBytes = 1024;
+        while (true) {
+            int ret = std::fwrite(ptr, allSize % flushBytes, 1, f);
+            if (ret > 0)
+                break;
+        }
+        wlen -= allSize % flushBytes;
+        if (wlen > 0)
+            while (true) {
+                int ret = std::fwrite(ptr + allSize - wlen, flushBytes, 1, f);
+                if (ret > 0) {
+                    wlen -= flushBytes;
+                    if (wlen == 0)
+                        break;
+                }
+            }
+    }
+    std::fclose(f);
+    return 0;
+}
+
+int Path::writeFile2(FILE *f, const char *dataPtr, int size) {//rb+ write wb+ cleanwrite ab+ append
+    if (f == NULL || size < 0)
+        return -1;
+    if (size > 0) {
+        const char *ptr = dataPtr;
+        int64_t allSize = size;
+        int wlen = allSize;
+        int flushBytes = 1024;
+        while (true) {
+            int ret = std::fwrite(ptr, allSize % flushBytes, 1, f);
+            if (ret > 0)
+                break;
+        }
+        wlen -= allSize % flushBytes;
+        if (wlen > 0)
+            while (true) {
+                int ret = std::fwrite(ptr + allSize - wlen, flushBytes, 1, f);
+                if (ret > 0) {
+                    wlen -= flushBytes;
+                    if (wlen == 0)
+                        break;
+                }
+            }
+    }
+    return 0;
 }

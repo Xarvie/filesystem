@@ -51,6 +51,8 @@
 #define os_path PurePath()
 #define __file__  PurePath(__FILE__).basename()
 #include <iostream>
+
+
 class PurePath {
 public:
 	enum ProtoType {
@@ -69,7 +71,10 @@ public:
 	std::string _path = "";
 	std::string protoHead = "";
 	ProtoType protoType = PROTO_TYPE_RELATIVE;
-
+    std::vector<char> readFile(const char* str);
+    std::vector<char> readFile2(FILE* fp, size_t size);
+    int writeFile(const char* str);
+    int writeFile2(FILE* f, const char* dataPtr, int size);
 	void setPath(std::string newPath) {
 		_path = newPath;
 	}
@@ -786,6 +791,11 @@ public:
     static std::FILE* tmpfile();
     static char* tmpnam( char* filename);
 
+    static std::vector<char> readFile(const char *str);
+    static std::vector<char> readFile2(FILE *fp, size_t size);
+    static int writeFile(const char *str, const char *dataPtr, int size,
+                  const char *mode = "rb+");
+    static int writeFile2(FILE *f, const char *dataPtr, int size);
     FILE* fp = nullptr;
 };
 

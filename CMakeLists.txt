@@ -25,7 +25,7 @@ add_definitions(-D_AFXDLL)
 set(CMAKE_MFC_FLAG 1)
 
 #libeay32
-set(LIBS ${LIBS} crypt32 libssh2 ws2_32 advapi32 shell32 user32 gdi32 )
+set(LIBS ${LIBS} crypt32 libssh2 ws2_32 advapi32 shell32 user32 gdi32 winmm)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/general/tomlplusplus-2.4.0/include/)
 
