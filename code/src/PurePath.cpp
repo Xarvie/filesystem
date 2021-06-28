@@ -1136,24 +1136,37 @@ std::vector<char> Path::readFile(const char *str) {
     if (f == NULL)
         return std::vector<char>();
     if (std::fseek(f, 0, SEEK_END))
+    {
+        std::fclose(f);
         return std::vector<char>();
+    }
     size_t size = std::ftell(f);
     if (std::fseek(f, 0, SEEK_SET))
+    {
+        std::fclose(f);
         return std::vector<char>();
+    }
     if (size == -1L || size == 0)
+    {
+        std::fclose(f);
         return std::vector<char>();
+    }
     std::vector<char> vecData_(size);
     {
         char *ptr = vecData_.data();
         int64_t allSize = size;
         int wlen = allSize;
-        int flushBytes = 1024;
-        while (true) {
+        const int flushBytes = 1024;
+        if(allSize % flushBytes) {
             int ret = std::fread(ptr, allSize % flushBytes, 1, f);
-            if (ret > 0)
-                break;
+            if (ret != 1)
+            {
+                std::fclose(f);
+                return std::vector<char>();
+            }
+            wlen -= allSize % flushBytes;
         }
-        wlen -= allSize % flushBytes;
+
         if (wlen > 0)
             while (true) {
                 int ret = std::fread(ptr + allSize - wlen, flushBytes, 1, f);
@@ -1162,8 +1175,13 @@ std::vector<char> Path::readFile(const char *str) {
                     if (wlen == 0)
                         break;
                 }
+                else{
+                    std::fclose(f);
+                    return std::vector<char>();
+                }
             }
     }
+
     std::fclose(f);
     return vecData_;
 }
@@ -1178,14 +1196,16 @@ std::vector<char> Path::readFile2(FILE *fp, size_t size) {
         char *ptr = vecData_.data();
         int64_t allSize = size;
         int wlen = allSize;
-        int flushBytes = 1024;
-        while (true) {
+        const int flushBytes = 1024;
+        if(allSize % flushBytes) {
             int ret = std::fread(ptr, allSize % flushBytes, 1, fp);
-            if (ret > 0)
-                break;
+            if (ret != 1)
+            {
+                return std::vector<char>();
+            }
+            wlen -= allSize % flushBytes;
         }
 
-        wlen -= allSize % flushBytes;
         if (wlen > 0)
             while (true) {
                 int ret = std::fread(ptr + allSize - wlen, flushBytes, 1, fp);
@@ -1193,6 +1213,9 @@ std::vector<char> Path::readFile2(FILE *fp, size_t size) {
                     wlen -= flushBytes;
                     if (wlen == 0)
                         break;
+                }
+                else{
+                    return std::vector<char>();
                 }
             }
     }
