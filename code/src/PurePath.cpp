@@ -1007,7 +1007,11 @@ std::string Path::touch(int mode, bool exist_ok) {
 std::string Path::unlink(bool missing_ok) {
 }
 
-std::string Path::write_bytes(std::vector<char> &data) {
+bool Path::write_bytes(std::vector<char> &data) {
+	int ret = this->writeFile(this->_pp.str().c_str(), data.data(), data.size());
+	if(ret == 0)
+		return true;
+	return false;
 }
 
 std::string Path::write_text(const std::string &data, void *encoding, void *errors) {

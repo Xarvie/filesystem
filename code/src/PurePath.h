@@ -757,7 +757,7 @@ public:
 
 	std::string unlink(bool missing_ok = false);
 
-	std::string write_bytes(std::vector<char> &data);
+	bool write_bytes(std::vector<char> &data);
 
 	std::string write_text(const std::string &data, void *encoding = NULL, void *errors = NULL);
 
