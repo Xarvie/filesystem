@@ -33,6 +33,11 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/general/doctest-2.4.6
 #add_library(doctest "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/general/doctest-2.4.6/doctest/parts/doctest.cpp")
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/general/doctest-2.4.6/)
 set(LIBS ${LIBS} doctest::doctest)
+set (SDL2_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/general/sdl")
+
+#include_directories(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/general/libre/include)
+#link_directories(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/general/libre/)
+#set(LIBS ${LIBS} re)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/general/GameNetworkingSockets-1.3.0/)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/general/GameNetworkingSockets-1.3.0/include/)
