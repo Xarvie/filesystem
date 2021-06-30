@@ -26,8 +26,9 @@ set(CMAKE_MFC_FLAG 1)
 
 #libeay32
 set(LIBS ${LIBS} crypt32 libssh2 ws2_32 advapi32 shell32 user32 gdi32 winmm)
-
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/general/tomlplusplus-2.4.0/include/)
+#set(LIBS ${LIBS} ${CMAKE_CURRENT_SOURCE_DIR}/libmsquic.lib)
+#include_directories(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/include/)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/general/doctest-2.4.6/doctest/)
 #add_library(doctest "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/general/doctest-2.4.6/doctest/parts/doctest.cpp")

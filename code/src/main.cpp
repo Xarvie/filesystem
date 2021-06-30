@@ -294,3 +294,12 @@
 //	CHECK(PurePath("c:\\", "aaaa", "cccc/", "dddd\\").parts == PurePath("c:\\aaaa\\cccc\\dddd").parts);
 //	CHECK(PurePath("\\\\", "aaaa", "cccc/", "dddd\\").parts == PurePath("\\\\aaaa\\cccc\\dddd").parts);
 //}
+#include "server.h"
+#include "client.h"
+int main(){
+
+    std::thread c = std::thread([](){client();});
+    std::this_thread::sleep_for(std::chrono::seconds (60*3));
+
+    return 0;
+}
