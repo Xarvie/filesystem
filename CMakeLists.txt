@@ -2,7 +2,7 @@
 #rm ./* && cmake .. -G "Xcode" -DCMAKE_SYSTEM_NAME=iOS && open 3d4.xcodeproj/
 #
 cmake_minimum_required(VERSION 3.17)
-PROJECT(fs C CXX)
+PROJECT(filesystem C CXX)
 list(APPEND CMAKE_MODULE_PATH
         "${CMAKE_SOURCE_DIR}/cmake/macros")
 include(AutoCollect)
